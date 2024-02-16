@@ -35,6 +35,19 @@ inputs:
 runs:
   using: 'composite'
   steps: 
+    - name: Validate Inputs
+      run: python ./validate_inputs.py
+      shell: bash
+      env:
+        DOCKERFILE_CONTEXT: ${{ inputs.dockerfile_context }}
+        ENDPOINT: ${{ inputs.endpoint }}
+        TOKEN: ${{ inputs.token }}
+        TENANT_ID: ${{ inputs.tenant_id }}
+        REPOSITORY_NAME: ${{ inputs.repository_name }}
+        TAG: ${{ inputs.tag }}
+        SEVERITY: ${{ inputs.severity }}
+        CODE: ${{ inputs.code }}
+
     - name: Docker Build
       run: |
         docker build -t ${{ inputs.repository_name }}:${{ inputs.tag }} -f ${{ inputs.DOCKERFILE_CONTEXT }} .
