@@ -45,7 +45,7 @@ inputs:
 
 Steps for using Install-action in a workflow yaml file 
 - Checkout into the repo using checkout action.
-- Utilize the accuknox/container-scan-action repository with version tag v1.
+- Utilize the accuknox/container-scan-action repository with version tag v0.0.1.
 
 ### Token Generation from Accuknox SaaS and Viewing Tenant ID
 
@@ -64,7 +64,7 @@ Click on Generate:
 
 ```yaml
  - name: Run AccuKnox CSPM Scan
-        uses: accuknox/container-scan-action@v1
+        uses: accuknox/container-scan-action@v0.0.1
         with:                      
           token: 
           tenant_id: 
@@ -98,7 +98,7 @@ jobs:
         uses: actions/checkout@main  
      
       - name: Run AccuKnox CSPM Scan
-        uses: accuknox/container-scan-action@v1
+        uses: accuknox/container-scan-action@v0.0.1
         with:
           token: 
           tenant_id: 

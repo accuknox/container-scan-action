@@ -13,18 +13,6 @@ def validate_inputs(inputs):
 
     if 'REPOSITORY_NAME' not in inputs or not inputs['REPOSITORY_NAME']:
         errors.append("Repository name is required.")
-    if 'SEVERITY' in inputs:
-        valid_severities = {'UNKNOWN', 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'}
-        severity = inputs['SEVERITY'].upper()
-        if severity not in valid_severities:
-            errors.append("Invalid severity level provided.")
-
-
-    if 'CODE' in inputs:
-        code = inputs['CODE']
-        if code not in {'0', '1'}:
-            errors.append("Invalid code value provided.")
-    return errors
 
 def main():
     inputs = {
