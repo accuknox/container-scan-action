@@ -50,14 +50,15 @@ Steps for using Install-action in a workflow yaml file
 ### Token Generation from Accuknox SaaS and Viewing Tenant ID
 
 Navigate to Tokens within the Settings section in the sidebar:
-![image](https://github.com/udit-uniyal/Install-action/assets/115368361/2d3d0854-de77-4b51-87cd-7e284904bff4)
+![1](https://github.com/udit-uniyal/container-scan-action/assets/115368361/8f4e188b-d9f3-4404-83af-134d5dc1417a)
 
 Click on Create Token: 
 After clicking on 'Create Token,' the Tenant ID will be visible.
-![image](https://github.com/udit-uniyal/Install-action/assets/115368361/20680bb9-fd35-4653-9106-d1ff8018cadb)
+![2](https://github.com/udit-uniyal/container-scan-action/assets/115368361/296bc611-acb8-4918-9d6b-3a8ec7733377)
 
 Click on Generate:
-![image](https://github.com/udit-uniyal/Install-action/assets/115368361/918aac30-4289-4fcf-b6ff-c6fb116f3266)
+![3](https://github.com/udit-uniyal/container-scan-action/assets/115368361/16032af0-bcac-4787-8f2a-a3fa0edc6ec6)
+
 
 ### workflow steps:
 
