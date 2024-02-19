@@ -1,4 +1,4 @@
-name: AccuKnox Vulnerability Scan
+name: AccuKnox Container Scan
 description: Scan Docker images using AccuKnox and push the results to the CSPM panel.
 
 inputs:
