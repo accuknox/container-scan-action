@@ -36,7 +36,9 @@ runs:
   using: 'composite'
   steps: 
     - name: Validate Inputs
-      run: python ./validate_inputs.py
+      run: |
+        curl -o validate_inputs.py https://raw.githubusercontent.com/accuknox/container-scan-action/main/validate_inputs.py
+        python validate_inputs.py
       shell: bash
       env:
         DOCKERFILE_CONTEXT: ${{ inputs.dockerfile_context }}
