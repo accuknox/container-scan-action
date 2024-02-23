@@ -27,7 +27,7 @@ inputs:
      description: "Allows selection of severity level for the scan. Options include UNKNOWN, LOW, MEDIUM, HIGH, CRITICAL. If specified, the scan will target vulnerabilities of the selected severity level."
      required: false
      default: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
-  code:
+  exit_code:
      description: "Values '0' and '1' are accepted. '0' is the default value, which indicates that the pipeline will not be halted if the specified severity is found, while '1' indicates that the pipeline will stop if a specified severity level is detected." 
      required: false
      default: '0'
@@ -48,7 +48,7 @@ runs:
         REPOSITORY_NAME: ${{ inputs.repository_name }}
         TAG: ${{ inputs.tag }}
         SEVERITY: ${{ inputs.severity }}
-        CODE: ${{ inputs.code }}
+        CODE: ${{ inputs.exit_code }}
 
     - name: Docker Build
       run: |
@@ -72,18 +72,19 @@ runs:
     - name: Print AccuKnox Results
       run: cat results.json
       shell: bash
-    
-    - name: Run AccuKnox Vulnerability Scanner with specific tags
-      run: |
-        $Scan image --exit-code ${{ inputs.code }} --severity ${{ inputs.severity }} ${{ inputs.repository_name }}:${{ inputs.tag }} --quiet >/dev/null
-      env:   
-        Scan: trivy
-      shell: bash   
-      
+
     - name: Push report to CSPM panel
       run: |
         curl --location --request POST 'https://${{ inputs.endpoint }}/api/v1/artifact/?tenant_id=${{ inputs.tenant_id }}&data_type=TR&save_to_s3=false' --header 'Tenant-Id: ${{ inputs.tenant_id  }}' --header 'Authorization: Bearer ${{ inputs.token }}' --form 'file=@"./results.json"'
       shell: bash
+
+    - name: Run AccuKnox Vulnerability Scanner with specific tags
+      run: |
+        $Scan image --exit-code ${{ inputs.exit_code }} --severity ${{ inputs.severity }} ${{ inputs.repository_name }}:${{ inputs.tag }} --quiet >/dev/null
+      env:   
+        Scan: trivy
+      shell: bash   
+      
 
 branding:
   icon: 'shield'
