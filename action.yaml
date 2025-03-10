@@ -62,16 +62,7 @@ runs:
 
     - name: Run AccuKnox Vulnerability Scanner
       run: |
-        args=""
-        if [[ "${{ inputs.ignore_unfixed }}" == "true" ]]; then
-          args="$args --ignore-unfixed"
-        fi
-        $Scan image \
-          --severity ${{ inputs.severity }} \
-          -f json ${{ inputs.repository_name }}:${{ inputs.tag }} \
-          -o results.json \
-          --quiet \
-          "$args"
+        $Scan image --severity ${{ inputs.severity }} -f json ${{ inputs.repository_name }}:${{ inputs.tag }} -o results.json --quiet
       env:
         Scan: trivy
       shell: bash
