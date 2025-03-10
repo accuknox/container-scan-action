@@ -2,10 +2,6 @@ name: AccuKnox Container Scan
 description: Scan Docker images using AccuKnox and push the results to the CSPM panel.
 
 inputs:
-  dockerfile_context:
-    description: "The context of the Dockerfile to use for building the image."
-    required: true
-    default: "Dockerfile"
   endpoint:
     description: "The URL of the CSPM panel to push the scan results to."
     required: true
@@ -48,7 +44,6 @@ runs:
         python validate_inputs.py
       shell: bash
       env:
-        DOCKERFILE_CONTEXT: ${{ inputs.dockerfile_context }}
         ENDPOINT: ${{ inputs.endpoint }}
         TOKEN: ${{ inputs.token }}
         TENANT_ID: ${{ inputs.tenant_id }}
@@ -56,10 +51,7 @@ runs:
         TAG: ${{ inputs.tag }}
         SEVERITY: ${{ inputs.severity }}
         CODE: ${{ inputs.exit_code }}
-    - name: Docker Build
-      run: |
-        docker build -t ${{ inputs.repository_name }}:${{ inputs.tag }} -f ${{ inputs.DOCKERFILE_CONTEXT }} .
-      shell: bash
+        IGNORE_UNFIXED: ${{ inputs.ignore_unfixed }}
 
     - name: Download Vulnerability Scanner
       run: |
