@@ -24,6 +24,7 @@ def main():
         'TAG': os.getenv('TAG', ''),
         'SEVERITY': os.getenv('SEVERITY', ''),
         'CODE': os.getenv('CODE', '')
+        'IGNORE_UNFIXED': os.getenv('IGNORE_UNFIXED', ' '),
     }
 
 
