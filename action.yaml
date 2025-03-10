@@ -89,7 +89,7 @@ runs:
       run: |
         args=""
         if [[ "${{ inputs.ignore_unfixed }}" == "true" ]]; then
-          args="$args --ignore-unfixed"
+          args="--ignore-unfixed"
         fi
         $Scan image \
           --exit-code ${{ inputs.exit_code }} \
