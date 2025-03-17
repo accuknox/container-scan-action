@@ -4,17 +4,17 @@
 
 - [About Accuknox](https://www.accuknox.com/)
 
-| Input Values       | Description                                                                                            | Optional/Required | Default Values                         |
-| ------------------ | ------------------------------------------------------------------------------------------------------ | ----------------- | -------------------------------------- |
-| dockerfile_context | The context of the Dockerfile to use for building the image.                                           | Optional          | Dockerfile                             |
-| endpoint           | The URL of the CSPM panel to push the scan results to.                                                 | Optional          | `cspm.demo.accuknox.com`               |
-| token              | The token for authenticating with the CSPM panel.                                                      | Required          | -                                      |
-| tenant_id          | The ID of the tenant associated with the CSPM panel.                                                   | Required          | -                                      |
-| repository_name    | Docker image repository name.                                                                          | Required          | -                                      |
-| tag                | Add version tag to the repository.                                                                     | Optional          | `${{ github.run_id }}`                 |
-| severity           | Allows selection of severity level for the scan. Options include UNKNOWN, LOW, MEDIUM, HIGH, CRITICAL. | Optional          | `UNKNOWN, LOW, MEDIUM, HIGH, CRITICAL` |
-| exit_code          | Specifies pipeline behavior upon detecting specified severity level. '0' (continue) or '1' (halt).     | Optional          | 0                                      |
-| label              | The label created in AccuKnox SaaS for associating scan results.                                       | Required          | -                                      |
+| Input Values    | Description                                                                                            | Optional/Required | Default Values                         |
+|-----------------|--------------------------------------------------------------------------------------------------------|-------------------|----------------------------------------|
+| endpoint        | The URL of the CSPM panel to push the scan results to.                                                 | Optional          | `cspm.demo.accuknox.com`               |
+| token           | The token for authenticating with the CSPM panel.                                                      | Required          | -                                      |
+| tenant_id       | The ID of the tenant associated with the CSPM panel.                                                   | Required          | -                                      |
+| repository_name | Docker image repository name.                                                                          | Required          | -                                      |
+| tag             | Add version tag to the repository.                                                                     | Optional          | `${{ github.run_id }}`                 |
+| severity        | Allows selection of severity level for the scan. Options include UNKNOWN, LOW, MEDIUM, HIGH, CRITICAL. | Optional          | `UNKNOWN, LOW, MEDIUM, HIGH, CRITICAL` |
+| exit_code       | Specifies pipeline behavior upon detecting specified severity level. '0' (continue) or '1' (halt).     | Optional          | 0                                      |
+| ignore_unfixed  | Ignore vulnerabilities for which a fix isn't available yet.                                            | Optional          | false                                  |
+| label           | The label created in AccuKnox SaaS for associating scan results.                                       | Required          | -                                      |
 
 ## Usage
 
@@ -49,7 +49,7 @@ Click on Generate:
           tag:                             #Optional
           exit_code:                       #Optional
           severity:                        #Optional
-          dockerfile_context:              #Optional
+          ignore_unfixed:                  #Optional
 ```
 
 ## Minimalist Sample Configuration

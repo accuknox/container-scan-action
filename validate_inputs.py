@@ -16,7 +16,6 @@ def validate_inputs(inputs):
 
 def main():
     inputs = {
-        'DOCKERFILE_CONTEXT': os.getenv('DOCKERFILE_CONTEXT', ''),
         'ENDPOINT': os.getenv('ENDPOINT', ''),
         'TOKEN': os.getenv('TOKEN', ''),
         'TENANT_ID': os.getenv('TENANT_ID', ''),
@@ -24,6 +23,7 @@ def main():
         'TAG': os.getenv('TAG', ''),
         'SEVERITY': os.getenv('SEVERITY', ''),
         'CODE': os.getenv('CODE', '')
+        'IGNORE_UNFIXED': os.getenv('IGNORE_UNFIXED', ' '),
     }
 
 
