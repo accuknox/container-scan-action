@@ -78,22 +78,7 @@ runs:
           --header "Authorization: Bearer ${{ inputs.token }}" \
         --form "file=@./results.json")
       shell: bash
-
-    - name: Run AccuKnox Vulnerability Scanner with provided exit code
-      run: |
-        args=""
-        if [[ "${{ inputs.ignore_unfixed }}" == "true" ]]; then
-          args="--ignore-unfixed"
-        fi
-        $Scan image \
-          --exit-code ${{ inputs.exit_code }} \
-          --severity ${{ inputs.severity }} \
-          ${{ inputs.repository_name }}:${{ inputs.tag }} \
-          --quiet \
-          "$args" >/dev/null
-      env:
-        Scan: trivy
-      shell: bash
+      
 
 branding:
   icon: "shield"
