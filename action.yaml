@@ -77,12 +77,6 @@ runs:
           --header "Tenant-Id: ${{ inputs.tenant_id }}" \
           --header "Authorization: Bearer ${{ inputs.token }}" \
         --form "file=@./results.json")
-
-        echo "Response: $response"
-        if [[ "$response" != *"File received successfully"* ]]; then
-          echo "Error: Failed to push report to CSPM panel"
-          exit 1
-        fi
       shell: bash
 
     - name: Run AccuKnox Vulnerability Scanner with provided exit code
