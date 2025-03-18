@@ -73,13 +73,12 @@ runs:
 
     - name: Push report to CSPM panel
       run: |
-        response=$(curl --location --request POST "https://${{ inputs.endpoint }}/api/v1/artifact/?tenant_id=${{ inputs.tenant_id }}&data_type=TR&label_id=${{ inputs.label }}&save_to_s3=true" \
+        curl --location --request POST "https://${{ inputs.endpoint }}/api/v1/artifact/?tenant_id=${{ inputs.tenant_id }}&data_type=TR&label_id=${{ inputs.label }}&save_to_s3=true" \
           --header "Tenant-Id: ${{ inputs.tenant_id }}" \
           --header "Authorization: Bearer ${{ inputs.token }}" \
-        --form "file=@./results.json")
+          --form "file=@./results.json"
       shell: bash
       
-
 branding:
   icon: "shield"
   color: "green"
