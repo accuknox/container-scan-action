@@ -1,88 +1,88 @@
 name: AccuKnox Container Scan
-description: Scan Docker images using AccuKnox and push the results to the CSPM panel.
+
+description: Scan Docker images using AccuKnox and push the results to the AccuKnox Console.
 
 inputs:
-  dockerfile_context:
-    description: 'The context of the Dockerfile to use for building the image.'
-    required: true
-    default: 'Dockerfile'
   endpoint:
-    description: 'The URL of the CSPM panel to push the scan results to.'
+    description: "The URL of the AccuKnox Console to push the scan results."
     required: true
-    default: 'cspm.demo.accuknox.com'
+    default: "cspm.demo.accuknox.com"
   token:
-    description: 'The token for authenticating with the CSPM panel.'
+    description: "The token for authenticating with the Accuknox Console."
     required: true
   tenant_id:
-    description: 'The ID of the tenant associated with the CSPM panel.'
+    description: "The ID of the tenant associated with the AccuKnox Console."
     required: true
-  repository_name: 
-     description: 'Docker image repository name'
-     required: true
+  image:
+    description: "image name"
+    required: true
   tag:
-     description: 'Add version tag to the repository'
-     required: true
-     default: '${{ github.run_id }}'
+    description: "Add version tag to the image name"
+    required: true
+    default: "${{ github.run_id }}"
   severity:
-     description: "Allows selection of severity level for the scan. Options include UNKNOWN, LOW, MEDIUM, HIGH, CRITICAL. If specified, the scan will target vulnerabilities of the selected severity level."
-     required: false
-     default: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
-  code:
-     description: "Values '0' and '1' are accepted. '0' is the default value, which indicates that the pipeline will not be halted if the specified severity is found, while '1' indicates that the pipeline will stop if a specified severity level is detected." 
-     required: false
-     default: '0'
+    description: "Allows selection of severity level for the scan. Options include UNKNOWN, LOW, MEDIUM, HIGH, CRITICAL. If specified, the scan will target vulnerabilities of the selected severity level."
+    required: false
+  exit_code:
+    description: "Values '0' and '1' are accepted. '0' is the default value, which indicates that the pipeline will not be halted if the specified severity is found, while '1' indicates that the pipeline will stop if a specified severity level is detected."
+    required: false
+    default: "0"
+  ignore_unfixed:
+    description: "Ignore vulnerabilities for which a fix isn't available yet."
+    required: false
+    default: false
+  label:
+    description: "The label created in AccuKnox Console for associating scan results."
+    required: true
 
 runs:
-  using: 'composite'
-  steps: 
+  using: "composite"
+  steps:
     - name: Validate Inputs
-      run: python ./validate_inputs.py
+      run: |
+        curl -o validate_inputs.py https://raw.githubusercontent.com/accuknox/container-scan-action/main/validate_inputs.py
+        python validate_inputs.py
       shell: bash
       env:
-        DOCKERFILE_CONTEXT: ${{ inputs.dockerfile_context }}
         ENDPOINT: ${{ inputs.endpoint }}
         TOKEN: ${{ inputs.token }}
         TENANT_ID: ${{ inputs.tenant_id }}
-        REPOSITORY_NAME: ${{ inputs.repository_name }}
+        image: ${{ inputs.image }}
         TAG: ${{ inputs.tag }}
         SEVERITY: ${{ inputs.severity }}
-        CODE: ${{ inputs.code }}
+        CODE: ${{ inputs.exit_code }}
+        IGNORE_UNFIXED: ${{ inputs.ignore_unfixed }}
 
-    - name: Docker Build
-      run: |
-        docker build -t ${{ inputs.repository_name }}:${{ inputs.tag }} -f ${{ inputs.DOCKERFILE_CONTEXT }} .
-      shell: bash
-      
     - name: Download Vulnerability Scanner
       run: |
-        curl -sfL $url | sh -s -- -b /usr/local/bin > /dev/null
-      env: 
-        url: https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
       shell: bash
-      
+
     - name: Run AccuKnox Vulnerability Scanner
       run: |
-        $Scan image --severity ${{ inputs.severity }} -f json ${{ inputs.repository_name }}:${{ inputs.tag }} -o results.json --quiet 
-      env:   
-        Scan: trivy
-      shell: bash  
-      
-    - name: Print AccuKnox Results
-      run: cat results.json
+        trivy image -f json -o results.json --quiet ${{ inputs.image }}:${{ inputs.tag }}
       shell: bash
-    
-    - name: Run AccuKnox Vulnerability Scanner with specific tags
+
+    - name: Push report to AccuKnox Console
       run: |
-        $Scan image --exit-code ${{ inputs.code }} --severity ${{ inputs.severity }} ${{ inputs.repository_name }}:${{ inputs.tag }} --quiet >/dev/null
-      env:   
-        Scan: trivy
-      shell: bash   
-      
-    - name: Push report to CSPM panel
+        curl --location --request POST "https://${{ inputs.endpoint }}/api/v1/artifact/?tenant_id=${{ inputs.tenant_id }}&data_type=TR&label_id=${{ inputs.label }}&save_to_s3=true" \
+        --header "Tenant-Id: ${{ inputs.tenant_id }}" \
+        --header "Authorization: Bearer ${{ inputs.token }}" \
+        --form 'file=@"results.json"'
+      shell: bash
+
+    - name: Check for specified severity vulnerabilities
+      if: ${{ inputs.severity != '' }}
       run: |
-        curl --location --request POST 'https://${{ inputs.endpoint }}/api/v1/artifact/?tenant_id=${{ inputs.tenant_id }}&data_type=TR&save_to_s3=false' --header 'Tenant-Id: ${{ inputs.tenant_id  }}' --header 'Authorization: Bearer ${{ inputs.token }}' --form 'file=@"./results.json"'
+        SEVERITIES=$(echo "${{ inputs.severity }}" | tr ',' '|')  # Convert to grep pattern
+        if grep -E "\"Severity\":\s*\"($SEVERITIES)\"" results.json; then
+          echo "AccuKnox Scan has halted the deployment due to detected vulnerabilities in severity levels: ${{ inputs.severity }}"
+          exit 1
+        else
+          exit 0
+        fi
       shell: bash
 
 branding:
-  icon: 'shield'
-  color: 'green'
+  icon: "shield"
+  color: "green"

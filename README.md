@@ -1,6 +1,8 @@
-# install-action
+# AccuKnox Container Scan GitHub Action
 
-Github actions to install vulnerability scanner.
+**Description**
+
+This GitHub Action scans Docker images for vulnerabilities and uploads the scan results to the AccuKnox Console. It can be configured with specific inputs to integrate seamlessly into your DevSecOps pipeline, ensuring continuous security compliance.
 
 ## Learn More
 
@@ -10,35 +12,29 @@ Github actions to install vulnerability scanner.
 
 ```yaml
 inputs:
-  dockerfile_context:
-    description: 'The context of the Dockerfile to use for building the image.'
-    required: true
-    default: 'Dockerfile'
   endpoint:
     description: 'The URL of the CSPM panel to push the scan results to.'
     required: true
     default: 'cspm.demo.accuknox.com'
   token:
-    description: 'The token for authenticating with the CSPM panel.'
+    description: 'The token for authenticating with the AccuKnox Console.'
     required: true
   tenant_id:
-    description: 'The ID of the tenant associated with the CSPM panel.'
+    description: 'The ID of the tenant associated with the AccuKnox Console.'
     required: true
-  repository_name: 
-     description: 'Docker image repository name'
+  label:
+    description: "The label created in AccuKnox Console for associating scan results."
+    required: true
+  image: 
+     description: 'Docker image name'
      required: true
   tag:
-     description: 'Add version tag to the repository'
+     description: 'version tag of the image'
      required: true
      default: '${{ github.run_id }}'
   severity:
-     description: "Allows selection of severity level for the scan. Options include UNKNOWN, LOW, MEDIUM, HIGH, CRITICAL. If specified, the scan will target vulnerabilities of the selected severity level."
+     description: "Allows selection of severity levels for the scan. Options include UNKNOWN, LOW, MEDIUM, HIGH, and CRITICAL. If specified, the pipeline will exit whenever a vulnerability with the specified severity is detected."
      required: false
-     default: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
-  code:
-     description: "Values '0' and '1' are accepted. '0' is the default value, which indicates that the pipeline will not be halted if the specified severity is found, while '1' indicates that the pipeline will stop if a specified severity level is detected." 
-     required: false
-     default: '0'
 ```
 
 ## Usage
