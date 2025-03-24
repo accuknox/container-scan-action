@@ -16,8 +16,9 @@ def validate_inputs(inputs):
     if 'SEVERITY' in inputs:
         valid_severities = {'UNKNOWN', 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'}
         severity = inputs['SEVERITY'].upper()
-        if severity not in valid_severities:
-            errors.append("Invalid severity level provided.")
+        for s in severity.split(','):
+            if s not in valid_severities:
+                errors.append("Invalid severity level provided.")
 
 
     if 'CODE' in inputs:
