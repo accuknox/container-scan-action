@@ -5,25 +5,30 @@ import sys
 def validate_inputs(inputs):
     errors = []
 
-
     if 'TOKEN' not in inputs or not inputs['TOKEN']:
         errors.append("Token is required.")
+
     if 'TENANT_ID' not in inputs or not inputs['TENANT_ID']:
         errors.append("Tenant ID is required.")
 
-    if 'REPOSITORY_NAME' not in inputs or not inputs['REPOSITORY_NAME']:
-        errors.append("Repository name is required.")
+    if 'IMAGE' not in inputs or not inputs['IMAGE']:
+        errors.append("Image name is required.")
+
     if 'SEVERITY' in inputs:
         valid_severities = {'UNKNOWN', 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'}
         severity = inputs['SEVERITY'].upper()
-        if severity not in valid_severities:
-            errors.append("Invalid severity level provided.")
-
+        for s in severity.split(','):
+            if s not in valid_severities:
+                errors.append("Invalid severity level provided.")
 
     if 'CODE' in inputs:
         code = inputs['CODE']
         if code not in {'0', '1'}:
             errors.append("Invalid code value provided.")
+
+    if 'LABEL' not in inputs or not inputs['LABEL']:
+        errors.append("label is required.")
+
     return errors
 
 def main():
@@ -32,10 +37,11 @@ def main():
         'ENDPOINT': os.getenv('ENDPOINT', ''),
         'TOKEN': os.getenv('TOKEN', ''),
         'TENANT_ID': os.getenv('TENANT_ID', ''),
-        'REPOSITORY_NAME': os.getenv('REPOSITORY_NAME', ''),
+        'IMAGE': os.getenv('IMAGE', ''),
         'TAG': os.getenv('TAG', ''),
         'SEVERITY': os.getenv('SEVERITY', ''),
-        'CODE': os.getenv('CODE', '')
+        'CODE': os.getenv('CODE', ''),
+        'LABEL': os.getenv('LABEL', '')
     }
 
 
