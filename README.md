@@ -1,6 +1,6 @@
 
 
-#  **AccuKnox Container Scan GitHub Action**  
+#  **AccuKnox Container Scan**  
 
 ### **Enhance Your Container Security with Automated Vulnerability Scanning**  
 
