@@ -75,7 +75,7 @@ This GitHub Action supports the following inputs:
 
 | **Input Parameter** | **Description** | **Required** | **Default Value** |
 |----------------------|----------------|--------------|-------------------|
-| `endpoint` | The URL of the CSPM panel where scan results are uploaded. | ✅ Yes | `cspm.demo.accuknox.com` |
+| `endpoint` | The URL of the AccuKnox Console where scan results are uploaded. | ✅ Yes | `cspm.demo.accuknox.com` |
 | `token` | Authentication token for AccuKnox API. | ✅ Yes | None |
 | `tenant_id` | Tenant ID for the AccuKnox Console. | ✅ Yes | None |
 | `label` | Label to categorize scan results in AccuKnox Console. | ✅ Yes | None |
