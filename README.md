@@ -53,6 +53,10 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
+      - name: Build Docker Image
+        run: |
+          docker build -t my-docker-repo/image-name:latest .
+
       - name: Run AccuKnox CSPM Scan
         uses: accuknox/container-scan-action@v1
         with:
@@ -86,11 +90,14 @@ This GitHub Action supports the following inputs:
 ### **Step 1: Checkout Your Repository**  
 The workflow starts by pulling your source code from GitHub.  
 
-### **Step 2: Run AccuKnox Container Scan**  
+### **Step 2: Build the Docker Image**
+Build the Docker image for scanning in later stages via AccuKnox Container Scan plugin. 
+
+### **Step 3: Run AccuKnox Container Scan**  
 - The scan is executed using the `accuknox/container-scan-action@v1` GitHub Action.  
 - The provided **Docker image** is analyzed, and results are generated.  
 
-### **Step 3: Scan Results Uploaded**  
+### **Step 4: Scan Results Uploaded**  
 - The scan results are securely uploaded to the **AccuKnox Console**.  
 - The pipeline can fail based on detected vulnerabilities and the configured **severity level**.  
 
