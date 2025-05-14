@@ -40,8 +40,8 @@ runs:
   steps:
     - name: Validate Inputs
       run: |
-        curl -o validate_inputs.py https://raw.githubusercontent.com/accuknox/container-scan-action/main/validate_inputs.py
-        python validate_inputs.py
+        curl -fsSL -o validate_inputs.py https://raw.githubusercontent.com/accuknox/container-scan-action/main/validate_inputs.py
+        python3 validate_inputs.py
       shell: bash
       env:
         ENDPOINT: ${{ inputs.endpoint }}

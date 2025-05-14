@@ -1,62 +1,56 @@
 import os
-import json
 import sys
 
-def validate_inputs(inputs):
-    errors = []
+REQUIRED_FIELDS = [
+    "ENDPOINT",
+    "TOKEN",
+    "TENANT_ID",
+    "IMAGE",
+    "TAG",
+    "LABEL",
+]
 
-    if 'TOKEN' not in inputs or not inputs['TOKEN']:
-        errors.append("Token is required.")
-
-    if 'TENANT_ID' not in inputs or not inputs['TENANT_ID']:
-        errors.append("Tenant ID is required.")
-
-    if 'IMAGE' not in inputs or not inputs['IMAGE']:
-        errors.append("Image name is required.")
-
-    if 'SEVERITY' in inputs:
-        valid_severities = {'UNKNOWN', 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'}
-        severity = inputs['SEVERITY'].upper()
-        for s in severity.split(','):
-            if s not in valid_severities:
-                errors.append("Invalid severity level provided.")
-
-    if 'CODE' in inputs:
-        code = inputs['CODE']
-        if code not in {'0', '1'}:
-            errors.append("Invalid code value provided.")
-
-    if 'LABEL' not in inputs or not inputs['LABEL']:
-        errors.append("label is required.")
-
-    return errors
-
-def main():
-    inputs = {
-        'DOCKERFILE_CONTEXT': os.getenv('DOCKERFILE_CONTEXT', ''),
-        'ENDPOINT': os.getenv('ENDPOINT', ''),
-        'TOKEN': os.getenv('TOKEN', ''),
-        'TENANT_ID': os.getenv('TENANT_ID', ''),
-        'IMAGE': os.getenv('IMAGE', ''),
-        'TAG': os.getenv('TAG', ''),
-        'SEVERITY': os.getenv('SEVERITY', ''),
-        'CODE': os.getenv('CODE', ''),
-        'LABEL': os.getenv('LABEL', '')
-    }
+SEVERITY_LEVELS = {"UNKNOWN", "LOW", "MEDIUM", "HIGH", "CRITICAL"}
+EXIT_CODES = {"0", "1"}
 
 
-    errors = validate_inputs(inputs)
+def exit_with_error(msg):
+    print(f"[ERROR] {msg}")
+    sys.exit(1)
 
 
-    if errors:
-        print("Input validation failed:")
-        for error in errors:
-            print(f"- {error}")
-        sys.exit(1)
-    else:
-        print("Input validation passed.")
-        sys.exit(0)
+def validate_required_fields():
+    for field in REQUIRED_FIELDS:
+        value = os.getenv(field)
+        if not value:
+            exit_with_error(f"Missing required input: {field}")
+
+
+def validate_severity():
+    severity = os.getenv("SEVERITY", "")
+    if severity:
+        levels = {s.strip().upper() for s in severity.split(",")}
+        invalid = levels - SEVERITY_LEVELS
+        if invalid:
+            exit_with_error(f"Invalid severity level(s): {', '.join(invalid)}. Allowed: {', '.join(SEVERITY_LEVELS)}")
+
+
+def validate_exit_code():
+    code = os.getenv("CODE", "0")
+    if code not in EXIT_CODES:
+        exit_with_error(f"Invalid exit_code: {code}. Allowed values are: 0 or 1")
+
+
+def validate_ignore_unfixed():
+    value = os.getenv("IGNORE_UNFIXED", "false").lower()
+    if value not in {"true", "false"}:
+        exit_with_error("IGNORE_UNFIXED must be either 'true' or 'false'")
+
 
 if __name__ == "__main__":
-    main()
+    validate_required_fields()
+    validate_severity()
+    validate_exit_code()
+    validate_ignore_unfixed()
+    print("[INFO] All inputs are valid.")
 
