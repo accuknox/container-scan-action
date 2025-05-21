@@ -14,7 +14,7 @@ inputs:
     description: "The ID of the tenant associated with the AccuKnox Console."
     required: true
   image:
-    description: "image name"
+    description: "Image name"
     required: true
   tag:
     description: "Add version tag to the image name"
@@ -23,14 +23,6 @@ inputs:
   severity:
     description: "Allows selection of severity level for the scan. Options include UNKNOWN, LOW, MEDIUM, HIGH, CRITICAL. If specified, the scan will target vulnerabilities of the selected severity level."
     required: false
-  exit_code:
-    description: "Values '0' and '1' are accepted. '0' is the default value, which indicates that the pipeline will not be halted if the specified severity is found, while '1' indicates that the pipeline will stop if a specified severity level is detected."
-    required: false
-    default: "0"
-  ignore_unfixed:
-    description: "Ignore vulnerabilities for which a fix isn't available yet."
-    required: false
-    default: false
   label:
     description: "The label created in AccuKnox Console for associating scan results."
     required: true
@@ -50,11 +42,9 @@ runs:
         IMAGE: ${{ inputs.image }}
         TAG: ${{ inputs.tag }}
         SEVERITY: ${{ inputs.severity }}
-        CODE: ${{ inputs.exit_code }}
-        IGNORE_UNFIXED: ${{ inputs.ignore_unfixed }}
         LABEL: ${{ inputs.label }}
 
-    - name: Download Vulnerability Scanner
+    - name: Download AccuKnox Vulnerability Scanner
       run: |
         curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
       shell: bash
@@ -75,11 +65,12 @@ runs:
     - name: Check for specified severity vulnerabilities
       if: ${{ inputs.severity != '' }}
       run: |
-        SEVERITIES=$(echo "${{ inputs.severity }}" | tr ',' '|')  # Convert to grep pattern
+        SEVERITIES=$(echo "${{ inputs.severity }}" | tr ',' '|')
         if grep -E "\"Severity\":\s*\"($SEVERITIES)\"" results.json; then
           echo "AccuKnox Scan has halted the deployment due to detected vulnerabilities in severity levels: ${{ inputs.severity }}"
           exit 1
         else
+          echo "No blocking severity vulnerabilities found."
           exit 0
         fi
       shell: bash
