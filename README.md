@@ -1,102 +1,139 @@
-# AccuKnox Container Scan GitHub Action
+# AccuKnox Container Scan
 
-**Description**
+🛡️ **Secure Your Container Images Automatically**
 
-This GitHub Action scans Docker images for vulnerabilities and uploads the scan results to the AccuKnox Console. It can be configured with specific inputs to integrate seamlessly into your DevSecOps pipeline, ensuring continuous security compliance.
+The **AccuKnox Container Scan GitHub Action** enables developers and DevSecOps teams to perform automated vulnerability scans on container images and seamlessly upload results to the AccuKnox Console. Ensure your container workloads are compliant, secure, and free from known vulnerabilities.
 
-## Learn More
+---
 
-- [About Accuknox](https://www.accuknox.com/)
+## 🎯 Key Features
 
-## Inputs
+✅ **Automated Container Image Scanning** – Detects known vulnerabilities in containerized workloads.
+✅ **Seamless GitHub Actions Integration** – Plug directly into your CI/CD pipelines.
+✅ **Centralized Results** – Scan reports are uploaded to the AccuKnox Console for review and tracking.
+✅ **Severity Enforcement** – Block deployments with high/critical vulnerabilities.
+✅ **Custom Labels and Metadata** – Tag scan reports using labels in AccuKnox Console.
 
-```yaml
-inputs:
-  endpoint:
-    description: 'The URL of the CSPM panel to push the scan results to.'
-    required: true
-    default: 'cspm.demo.accuknox.com'
-  token:
-    description: 'The token for authenticating with the AccuKnox Console.'
-    required: true
-  tenant_id:
-    description: 'The ID of the tenant associated with the AccuKnox Console.'
-    required: true
-  label:
-    description: "The label created in AccuKnox Console for associating scan results."
-    required: true
-  image: 
-     description: 'Docker image name'
-     required: true
-  tag:
-     description: 'version tag of the image'
-     required: true
-     default: '${{ github.run_id }}'
-  severity:
-     description: "Allows selection of severity levels for the scan. Options include UNKNOWN, LOW, MEDIUM, HIGH, and CRITICAL. If specified, the pipeline will exit whenever a vulnerability with the specified severity is detected."
-     required: false
-```
+---
 
-## Usage
+## ⚠️ Prerequisites
 
-Steps for using Install-action in a workflow yaml file 
-- Checkout into the repo using checkout action.
-- Utilize the accuknox/container-scan-action repository with version tag v1.
+Before using this GitHub Action, ensure you have the following:
 
-### Token Generation from Accuknox SaaS and Viewing Tenant ID
+1️⃣ **AccuKnox Console Access** – Sign in to your AccuKnox tenant.
+2️⃣ **API Token & Tenant ID** – Retrieve these from the AccuKnox Console. (see [Token Generation](https://help.accuknox.com/getting-started/how-to-create-tokens/)).
+3️⃣ **Label Created in Console** – For tagging the uploaded scan reports.
+4️⃣ **GitHub Secrets Setup** – Store credentials securely using GitHub Secrets.
 
-Navigate to Tokens within the Settings section in the sidebar:
-![1](https://github.com/udit-uniyal/container-scan-action/assets/115368361/8f4e188b-d9f3-4404-83af-134d5dc1417a)
+---
 
-Click on Create Token: 
-After clicking on 'Create Token,' the Tenant ID will be visible.
-![2](https://github.com/udit-uniyal/container-scan-action/assets/115368361/296bc611-acb8-4918-9d6b-3a8ec7733377)
+## 📌 Installation & Usage
 
-Click on Generate:
-![3](https://github.com/udit-uniyal/container-scan-action/assets/115368361/16032af0-bcac-4787-8f2a-a3fa0edc6ec6)
+### Step 1: Retrieve AccuKnox Credentials
 
+* **Login to AccuKnox Console**
+* Navigate to **Settings → Tokens**
+* Click **"Create Token"** and store:
 
-### workflow steps:
+  * `accuknox_token`
+  * `tenant_id`
+
+### Step 2: Define Your GitHub Workflow
+
+Create a workflow file (e.g., `.github/workflows/container-scan.yml`) and add the following configuration:
 
 ```yaml
- - name: Run AccuKnox CSPM Scan
-        uses: accuknox/container-scan-action@v1
-        with:                      
-          token: 
-          tenant_id: 
-          repository_name:
-          endpoint:                        #Optional
-          tag:                             #Optional
-          severity:                        #Optional
-          dockerfile_context:              #Optional
-```
-
-
-## Minimalist Sample Configuration 
-
-```yaml
-
-name: AccuKnox Scan Workflow
+name: AccuKnox Container Scan
 
 on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
 
 jobs:
-  accuknox-cicd:
+  container-scan:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@main  
-     
-      - name: Run AccuKnox CSPM Scan
-        uses: accuknox/container-scan-action@v1
+        uses: actions/checkout@v2
+
+      - name: Run AccuKnox Container Scanner
+        uses: accuknox/container-scan-action@v1.0.0
         with:
-          token: 
-          tenant_id: 
-          repository_name: 
+          endpoint: ${{ secrets.ACCUKNOX_ENDPOINT }}
+          token: ${{ secrets.ACCUKNOX_DEV_TOKEN }}
+          tenant_id: ${{ secrets.TENANT_ID }}
+          image: "your-image-name"
+          tag: "latest"
+          severity: "HIGH,CRITICAL"
+          label: "container-release-scan"
 ```
+
+---
+
+## ⚙️ Configuration Options (Inputs)
+
+| Input       | Description                                                                 | Required | Default                  |
+| ----------- | --------------------------------------------------------------------------- | -------- | ------------------------ |
+| `endpoint`  | URL of the AccuKnox Console to push scan results                            | ✅ Yes    | `cspm.demo.accuknox.com` |
+| `token`     | API token to authenticate with the AccuKnox Console                         | ✅ Yes    | —                        |
+| `tenant_id` | Tenant ID from the AccuKnox Console                                         | ✅ Yes    | —                        |
+| `image`     | Name of the container image to scan                                         | ✅ Yes    | —                        |
+| `tag`       | Version tag for the container image                                         | ✅ Yes    | `${{ github.run_id }}`   |
+| `severity`  | (Optional) Severity levels to block pipeline (`LOW`, `MEDIUM`, `HIGH`, etc) | ❌ No     | —                        |
+| `label`     | Label used in AccuKnox Console to tag scan results                          | ✅ Yes    | —                        |
+
+---
+
+## 🔍 How It Works
+
+1️⃣ **Container Image is Scanned**
+AccuKnox Container Vulnerability Scanner analyzes the specified image for CVEs and misconfigurations.
+
+2️⃣ **Scan Report Generated**
+A JSON scan report is produced with detailed findings.
+
+3️⃣ **Upload to AccuKnox Console**
+The report is securely sent to your tenant's dashboard for centralized review and tracking.
+
+4️⃣ **Severity Filtering (Optional)**
+If `severity` is defined, the workflow will block if matching vulnerabilities are found.
+
+---
+
+## 🛠️ Troubleshooting & Best Practices
+
+❌ **Pipeline Blocked by Vulnerabilities?**
+
+* Adjust the `severity` input to allow less critical findings.
+* Review scan reports in the AccuKnox Console to triage issues.
+
+🔑 **Authentication Errors?**
+
+* Verify your `token` and `tenant_id` are correctly stored in GitHub Secrets.
+* Regenerate credentials in AccuKnox Console if needed.
+
+🧪 **Best Practices**
+
+* Scan every push and release candidate.
+* Use different labels for different environments (e.g., dev, staging, prod).
+* Monitor trends via AccuKnox Console for proactive risk management.
+
+---
+
+## 📖 Support & Documentation
+
+📚 **Read More**: [AccuKnox Docs](https://docs.accuknox.com)
+📧 **Contact Support**: [support@accuknox.com](mailto:support@accuknox.com)
+
+---
+
+## 🏁 Conclusion
+
+The **AccuKnox Container Scan GitHub Action** empowers your CI/CD pipelines with automated container security scanning. Identify critical issues early, enforce deployment security gates, and gain visibility into vulnerabilities across container workloads.
+
+🔐 **Shift Left with AccuKnox – Secure from Build to Runtime!** 🧱
+
+---
+
+Let me know if you'd like the badge or marketplace submission content as well.
