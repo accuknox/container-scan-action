@@ -8,11 +8,11 @@ The **AccuKnox Container Scan GitHub Action** enables developers and DevSecOps t
 
 ## 🎯 Key Features
 
-✅ **Automated Container Image Scanning** – Detects known vulnerabilities in containerized workloads.
-✅ **Seamless GitHub Actions Integration** – Plug directly into your CI/CD pipelines.
-✅ **Centralized Results** – Scan reports are uploaded to the AccuKnox Console for review and tracking.
-✅ **Severity Enforcement** – Block deployments with high/critical vulnerabilities.
-✅ **Custom Labels and Metadata** – Tag scan reports using labels in AccuKnox Console.
+- **Automated Container Image Scanning** – Detects known vulnerabilities in containerized workloads.
+- **Seamless GitHub Actions Integration** – Plug directly into your CI/CD pipelines.
+- **Centralized Results** – Scan reports are uploaded to the AccuKnox Console for review and tracking.
+- **Severity Enforcement** – Block deployments with high/critical vulnerabilities.
+- **Custom Labels and Metadata** – Tag scan reports using labels in AccuKnox Console.
 
 ---
 
@@ -20,10 +20,10 @@ The **AccuKnox Container Scan GitHub Action** enables developers and DevSecOps t
 
 Before using this GitHub Action, ensure you have the following:
 
-1️⃣ **AccuKnox Console Access** – Sign in to your AccuKnox tenant.
-2️⃣ **API Token & Tenant ID** – Retrieve these from the AccuKnox Console. (see [Token Generation](https://help.accuknox.com/getting-started/how-to-create-tokens/)).
-3️⃣ **Label Created in Console** – For tagging the uploaded scan reports.
-4️⃣ **GitHub Secrets Setup** – Store credentials securely using GitHub Secrets.
+- **AccuKnox Console Access** – Sign in to your AccuKnox tenant.
+- **API Token & Tenant ID** – Retrieve these from the AccuKnox Console. (see [Token Generation](https://help.accuknox.com/getting-started/how-to-create-tokens/)).
+- **Label Created in Console** – For tagging the uploaded scan reports.
+- **GitHub Secrets Setup** – Store credentials securely using GitHub Secrets.
 
 ---
 
@@ -116,14 +116,13 @@ If `severity` is defined, the workflow will block if matching vulnerabilities ar
 🧪 **Best Practices**
 
 * Scan every push and release candidate.
-* Use different labels for different environments (e.g., dev, staging, prod).
 * Monitor trends via AccuKnox Console for proactive risk management.
 
 ---
 
 ## 📖 Support & Documentation
 
-📚 **Read More**: [AccuKnox Docs](https://docs.accuknox.com)
+📚 **Read More**: [AccuKnox Docs](https://help.accuknox.com)
 📧 **Contact Support**: [support@accuknox.com](mailto:support@accuknox.com)
 
 ---
@@ -135,5 +134,3 @@ The **AccuKnox Container Scan GitHub Action** empowers your CI/CD pipelines with
 🔐 **Shift Left with AccuKnox – Secure from Build to Runtime!** 🧱
 
 ---
-
-Let me know if you'd like the badge or marketplace submission content as well.
