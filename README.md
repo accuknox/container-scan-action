@@ -36,7 +36,6 @@ Before using this GitHub Action, ensure you have the following:
 * Click **"Create Token"** and store:
 
   * `accuknox_token`
-  * `tenant_id`
 
 ### Step 2: Define Your GitHub Workflow
 
@@ -55,18 +54,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Run AccuKnox Container Scanner
         uses: accuknox/container-scan-action@v1.0.0
         with:
+          soft_fail: false          # set false to fail workflow if vulnerabilities are found
           endpoint: ${{ secrets.ACCUKNOX_ENDPOINT }}
-          token: ${{ secrets.ACCUKNOX_DEV_TOKEN }}
-          tenant_id: ${{ secrets.TENANT_ID }}
+          label: ${{ secrets.ACCUKNOX_LABEL }}
+          token: ${{ secrets.ACCUKNOX_TOKEN }}
           image: "your-image-name"
-          tag: "latest"
-          severity: "HIGH,CRITICAL"
-          label: "container-release-scan"
+          tag: "latest"             # optional
+          severity: "LOW, MEDIUM, HIGH, CRITICAL, UNKNOWN"
+          
 ```
 
 ---
@@ -77,7 +77,6 @@ jobs:
 | ----------- | --------------------------------------------------------------------------- | -------- | ------------------------ |
 | `endpoint`  | URL of the AccuKnox Console to push scan results                            | ✅ Yes    | `cspm.demo.accuknox.com` |
 | `token`     | API token to authenticate with the AccuKnox Console                         | ✅ Yes    | —                        |
-| `tenant_id` | Tenant ID from the AccuKnox Console                                         | ✅ Yes    | —                        |
 | `image`     | Name of the container image to scan                                         | ✅ Yes    | —                        |
 | `tag`       | Version tag for the container image                                         | ✅ Yes    | `${{ github.run_id }}`   |
 | `severity`  | (Optional) Severity levels to block pipeline (`LOW`, `MEDIUM`, `HIGH`, etc) | ❌ No     | —                        |
