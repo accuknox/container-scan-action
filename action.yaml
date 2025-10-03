@@ -11,9 +11,15 @@ inputs:
   label:
     description: "Label for scan results in AccuKnox Console"
     required: true
-  image:
+  image_name:
     description: "Container image to scan (e.g., nginx)"
     required: true
+  tag:
+    description: "Optional tag for the image (e.g., latest)"
+    required: false
+  severity:
+    description: "Optional severity filter (e.g., high, critical)"
+    required: false
   soft_fail:
     description: "Continue workflow even if vulnerabilities are found"
     required: false
@@ -28,13 +34,15 @@ runs:
         ACCUKNOX_ENDPOINT: ${{ inputs.endpoint }}
         ACCUKNOX_TOKEN: ${{ inputs.token }}
         ACCUKNOX_LABEL: ${{ inputs.label }}
-        IMAGE: ${{ inputs.image }}
+        IMAGE_NAME: ${{ inputs.image_name }}
+        TAG: ${{ inputs.tag }}
+        SEVERITY: ${{ inputs.severity }}
         SOFT_FAIL: ${{ inputs.soft_fail }}
       run: |
         set -e
 
-        if [ -z "$ACCUKNOX_ENDPOINT" ] || [ -z "$ACCUKNOX_TOKEN" ] || [ -z "$ACCUKNOX_LABEL" ] || [ -z "$IMAGE" ]; then
-          echo "ERROR: endpoint, token, label, and image must be provided!"
+        if [ -z "$ACCUKNOX_ENDPOINT" ] || [ -z "$ACCUKNOX_TOKEN" ] || [ -z "$ACCUKNOX_LABEL" ] || [ -z "$IMAGE_NAME" ]; then
+          echo "ERROR: endpoint, token, label, and image_name must be provided!"
           exit 1
         fi
 
@@ -46,10 +54,15 @@ runs:
         ./accuknox-aspm-scanner tool install --type container
 
         # Build scan command
-        SCAN_CMD="./accuknox-aspm-scanner scan --command container --image $IMAGE"
+        SOFT_FAIL_ARG=""
+        SOFT_FAIL="${SOFT_FAIL//[$'\t\r\n ']}"
         if [ "$SOFT_FAIL" = "true" ]; then
-          SCAN_CMD="$SCAN_CMD --softfail"
+          SOFT_FAIL_ARG="--softfail"
         fi
 
-        echo "Running AccuKnox container scan for image: $IMAGE"
-        eval $SCAN_CMD
+        CMD="$IMAGE_NAME"
+        [ -n "$TAG" ] && CMD="$CMD:$TAG"
+        [ -n "$SEVERITY" ] && CMD="$CMD --severity $SEVERITY"
+
+        echo "Running AccuKnox container scan for image: $CMD"
+        ./accuknox-aspm-scanner scan --command container --image "$CMD" $SOFT_FAIL_ARG --container-mode
