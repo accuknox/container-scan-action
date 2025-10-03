@@ -27,12 +27,12 @@ runs:
       env:
         ACCUKNOX_ENDPOINT: ${{ inputs.endpoint }}
         ACCUKNOX_TOKEN: ${{ inputs.token }}
-        LABEL: ${{ inputs.label }}
+        ACCUKNOX_LABEL: ${{ inputs.label }}
         IMAGE: ${{ inputs.image }}
         SOFT_FAIL: ${{ inputs.soft_fail }}
       run: |
         set -e
-        if [ -z "$ACCUKNOX_ENDPOINT" ] || [ -z "$ACCUKNOX_TOKEN" ] || [ -z "$LABEL" ] || [ -z "$IMAGE" ]; then
+        if [ -z "$ACCUKNOX_ENDPOINT" ] || [ -z "$ACCUKNOX_TOKEN" ] || [ -z "$ACCUKNOXLABEL" ] || [ -z "$IMAGE" ]; then
           echo "ERROR: endpoint, token, label, and image must be provided!"
           exit 1
         fi
