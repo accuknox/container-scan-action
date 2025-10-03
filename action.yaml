@@ -1,12 +1,9 @@
 name: "AccuKnox Container Scanner"
-description: "Run AccuKnox Container Security scan on a container image"
+description: "Run AccuKnox Container Security scan on the current repository's container image"
 
 inputs:
   token:
     description: "API token for CSPM Console"
-    required: true
-  repository_name:
-    description: "Name of the repository being scanned"
     required: true
   label:
     description: "Label for scan results in AccuKnox Console"
@@ -14,17 +11,6 @@ inputs:
   endpoint:
     description: "CSPM Console endpoint URL"
     required: true
-  image_name:
-    description: "Container image to scan (e.g., nginx)"
-    required: true
-  dockerfile_context:
-    description: "Dockerfile context (optional)"
-    required: false
-    default: ""
-  tag:
-    description: "Optional tag for the image"
-    required: false
-    default: ""
   severity:
     description: "Optional severity filter (e.g., HIGH, CRITICAL)"
     required: false
@@ -41,21 +27,25 @@ runs:
       shell: bash
       env:
         ACCUKNOX_TOKEN: ${{ inputs.token }}
-        REPOSITORY_NAME: ${{ inputs.repository_name }}
         ACCUKNOX_LABEL: ${{ inputs.label }}
         ACCUKNOX_ENDPOINT: ${{ inputs.endpoint }}
-        IMAGE_NAME: ${{ inputs.image_name }}
-        DOCKERFILE_CONTEXT: ${{ inputs.dockerfile_context }}
-        TAG: ${{ inputs.tag }}
         SEVERITY: ${{ inputs.severity }}
         SOFT_FAIL: ${{ inputs.soft_fail }}
+        REPO_NAME: ${{ github.repository }}
+        RUN_ID: ${{ github.run_id }}
       run: |
         set -e
 
-        if [ -z "$ACCUKNOX_TOKEN" ] || [ -z "$REPOSITORY_NAME" ] || [ -z "$ACCUKNOX_LABEL" ] || [ -z "$ACCUKNOX_ENDPOINT" ] || [ -z "$IMAGE_NAME" ]; then
-          echo "ERROR: token, repository_name, label, endpoint, and image_name must be provided!"
+        if [ -z "$ACCUKNOX_TOKEN" ] || [ -z "$ACCUKNOX_LABEL" ] || [ -z "$ACCUKNOX_ENDPOINT" ]; then
+          echo "ERROR: token, label, and endpoint must be provided!"
           exit 1
         fi
+
+        IMAGE_NAME="$REPO_NAME"
+        IMAGE_TAG="$RUN_ID"
+
+        echo "Building Docker image from current repository: $IMAGE_NAME:$IMAGE_TAG"
+        docker build -t $IMAGE_NAME:$IMAGE_TAG .
 
         echo "Downloading AccuKnox ASPM Scanner..."
         curl -L https://github.com/accuknox/aspm-scanner-cli/releases/download/v0.13.4/accuknox-aspm-scanner -o accuknox-aspm-scanner
@@ -64,20 +54,16 @@ runs:
         echo "Installing container scan tool..."
         ./accuknox-aspm-scanner tool install --type container
 
-        # Prepare image reference
-        SCAN_IMAGE="$IMAGE_NAME"
-        [ -n "$TAG" ] && SCAN_IMAGE="$SCAN_IMAGE:$TAG"
-
-        # Prepare severity argument
+        # Build severity argument
         SEVERITY_ARG=""
         [ -n "$SEVERITY" ] && SEVERITY_ARG="--severity $SEVERITY"
 
-        # Prepare softfail argument
+        # Build softfail argument
         SOFT_FAIL="${SOFT_FAIL//[$'\t\r\n ']}"
         SOFT_FAIL_ARG=""
         if [ "$SOFT_FAIL" = "true" ]; then
           SOFT_FAIL_ARG="--softfail"
         fi
 
-        echo "Running AccuKnox container scan for image: $SCAN_IMAGE"
-        ./accuknox-aspm-scanner scan --command container --image "$SCAN_IMAGE" $SEVERITY_ARG $SOFT_F
+        echo "Running AccuKnox container scan for image: $IMAGE_NAME:$IMAGE_TAG"
+        ./accuknox-aspm-scanner scan --command container --image "$IMAGE_NAME:$IMAGE_TAG" $SEVERITY_ARG $SOFT_FAIL_ARG --container-mode
