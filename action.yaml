@@ -25,7 +25,7 @@ inputs:
   soft_fail:
     description: "Do not return an error code if there are failed checks"
     required: false
-    default: true
+    default: false
 
 runs:
   using: "composite"
@@ -55,9 +55,6 @@ runs:
         echo "Installing container scan tool..."
         ./accuknox-aspm-scanner tool install --type container
 
-        # Clean up SOFT_FAIL
-        SOFT_FAIL="${SOFT_FAIL//[$'\t\r\n ']}"
-        SOFT_FAIL_ARG=""
         if [ "$SOFT_FAIL" = "true" ]; then
           SOFT_FAIL_ARG="--softfail"
         fi
