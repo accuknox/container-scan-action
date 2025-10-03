@@ -36,16 +36,17 @@ runs:
           echo "ERROR: endpoint, token, label, and image must be provided!"
           exit 1
         fi
-    
+        
         echo "Downloading AccuKnox ASPM Scanner..."
         curl -L https://github.com/accuknox/aspm-scanner-cli/releases/download/v0.13.4/accuknox-aspm-scanner -o accuknox-aspm-scanner
         chmod +x accuknox-aspm-scanner
-    
+        
         echo "Installing container scan tool..."
         ./accuknox-aspm-scanner tool install --type container
-    
-        CMD="$IMAGE"
-        [ "$SOFT_FAIL" = "true" ] && CMD="$CMD --softfail"
-    
-        echo "Running AccuKnox container scan for image: $CMD"
-        ./accuknox-aspm-scanner image $CMD
+        
+        # Build scan command
+        SCAN_CMD="./accuknox-aspm-scanner scan --command container --image $IMAGE"
+        [ "$SOFT_FAIL" = "true" ] && SCAN_CMD="$SCAN_CMD --softfail"
+        
+        echo "Running AccuKnox container scan for image: $IMAGE"
+        eval $SCAN_CMD
