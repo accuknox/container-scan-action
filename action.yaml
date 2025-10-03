@@ -42,6 +42,9 @@ runs:
         curl -L https://github.com/accuknox/aspm-scanner-cli/releases/download/v0.13.4/accuknox-aspm-scanner -o accuknox-aspm-scanner
         chmod +x accuknox-aspm-scanner
 
+        echo "Installing container scan tool..."
+        ./accuknox-aspm-scanner tool install --type container
+
         CMD_ARGS="--image $IMAGE"
         if [ "$SOFT_FAIL" = "true" ]; then
           CMD_ARGS="$CMD_ARGS --softfail"
