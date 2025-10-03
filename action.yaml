@@ -11,14 +11,11 @@ inputs:
   endpoint:
     description: "The URL of the CSPM panel to push the scan results to."
     required: true
-  repository_name:
-    description: "The GitHub repository name."
-    required: true
   image_name:
-    description: "Docker image name"
+    description: "Docker image name to scan"
     required: true
   tag:
-    description: "Docker image tag"
+    description: "Docker image tag (optional)"
     required: false
     default: ""
   severity:
