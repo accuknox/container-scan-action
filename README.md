@@ -35,7 +35,7 @@ Before using this GitHub Action, ensure you have the following:
 * Navigate to **Settings → Tokens**
 * Click **"Create Token"** and store:
 
-  * `accuknox_token`
+  * `Accuknox_token`
 
 ### Step 2: Define Your GitHub Workflow
 
