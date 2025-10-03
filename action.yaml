@@ -1,23 +1,23 @@
 name: "AccuKnox Container Scanner"
-description: "Run AccuKnox container image scan"
+description: "Run AccuKnox Container Security scan on a container image"
 
 inputs:
-  image:
-    description: "Container image to scan (e.g., nginx:latest)"
-    required: true
-  soft_fail:
-    description: "Do not return an error code if there are failed checks"
-    required: false
-    default: false
   endpoint:
-    description: "CSPM panel endpoint URL"
-    required: true
-  label:
-    description: "Label in AccuKnox SaaS for scan results"
+    description: "AccuKnox endpoint URL"
     required: true
   token:
-    description: "Token for authenticating with CSPM panel"
+    description: "Token to authenticate with AccuKnox"
     required: true
+  label:
+    description: "Label to tag scan results in AccuKnox"
+    required: true
+  image:
+    description: "Name of the container image to scan"
+    required: true
+  soft_fail:
+    description: "Do not fail workflow if vulnerabilities are found"
+    required: false
+    default: false
 
 runs:
   using: "composite"
@@ -26,13 +26,14 @@ runs:
       shell: bash
       env:
         ACCUKNOX_ENDPOINT: ${{ inputs.endpoint }}
-        ACCUKNOX_LABEL: ${{ inputs.label }}
         ACCUKNOX_TOKEN: ${{ inputs.token }}
+        LABEL: ${{ inputs.label }}
         IMAGE: ${{ inputs.image }}
         SOFT_FAIL: ${{ inputs.soft_fail }}
       run: |
-        if [ -z "$ACCUKNOX_ENDPOINT" ] || [ -z "$ACCUKNOX_LABEL" ] || [ -z "$ACCUKNOX_TOKEN" ]; then
-          echo "ERROR: ACCUKNOX_ENDPOINT, ACCUKNOX_LABEL, and ACCUKNOX_TOKEN must be set!"
+        set -e
+        if [ -z "$ACCUKNOX_ENDPOINT" ] || [ -z "$ACCUKNOX_TOKEN" ] || [ -z "$LABEL" ] || [ -z "$IMAGE" ]; then
+          echo "ERROR: endpoint, token, label, and image must be provided!"
           exit 1
         fi
 
@@ -42,14 +43,10 @@ runs:
 
         CMD_ARGS="--image $IMAGE"
 
+        SOFT_FAIL_ARG=""
         if [ "$SOFT_FAIL" = "true" ]; then
           SOFT_FAIL_ARG="--softfail"
         fi
 
-        echo ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG container --command "$CMD_ARGS" \
-          --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" \
-          --repo-branch "${GITHUB_REF#refs/heads/}"
-
-        ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG container --command "$CMD_ARGS" \
-          --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" \
-          --repo-branch "${GITHUB_REF#refs/heads/}"
+        echo "Running AccuKnox container scan with CMD_ARGS: $CMD_ARGS $SOFT_FAIL_ARG"
+        ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG container --command "$CMD_ARGS"
