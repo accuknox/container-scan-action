@@ -32,23 +32,20 @@ runs:
         SOFT_FAIL: ${{ inputs.soft_fail }}
       run: |
         set -e
-
         if [ -z "$ACCUKNOX_ENDPOINT" ] || [ -z "$ACCUKNOX_TOKEN" ] || [ -z "$ACCUKNOX_LABEL" ] || [ -z "$IMAGE" ]; then
           echo "ERROR: endpoint, token, label, and image must be provided!"
           exit 1
         fi
-
+    
         echo "Downloading AccuKnox ASPM Scanner..."
         curl -L https://github.com/accuknox/aspm-scanner-cli/releases/download/v0.13.4/accuknox-aspm-scanner -o accuknox-aspm-scanner
         chmod +x accuknox-aspm-scanner
-
+    
         echo "Installing container scan tool..."
         ./accuknox-aspm-scanner tool install --type container
-
-        CMD_ARGS="--image $IMAGE"
-        if [ "$SOFT_FAIL" = "true" ]; then
-          CMD_ARGS="$CMD_ARGS --softfail"
-        fi
-
-        echo "Running AccuKnox container scan with CMD_ARGS: $CMD_ARGS"
-        ./accuknox-aspm-scanner scan container --command "$CMD_ARGS"
+    
+        CMD="$IMAGE"
+        [ "$SOFT_FAIL" = "true" ] && CMD="$CMD --softfail"
+    
+        echo "Running AccuKnox container scan for image: $CMD"
+        ./accuknox-aspm-scanner image $CMD
