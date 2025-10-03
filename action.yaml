@@ -3,26 +3,26 @@ description: "Run AccuKnox Container Security scan on a container image"
 
 inputs:
   endpoint:
-    description: "AccuKnox endpoint URL"
+    description: "CSPM Console endpoint URL"
     required: true
   token:
-    description: "Token to authenticate with AccuKnox"
+    description: "API token for CSPM Console"
     required: true
   label:
-    description: "Label to tag scan results in AccuKnox"
+    description: "Label for scan results in AccuKnox Console"
     required: true
   image:
-    description: "Name of the container image to scan"
+    description: "Container image to scan (e.g., nginx)"
     required: true
   soft_fail:
-    description: "Do not fail workflow if vulnerabilities are found"
+    description: "Continue workflow even if vulnerabilities are found"
     required: false
     default: false
 
 runs:
   using: "composite"
   steps:
-    - name: Run AccuKnox Container Scanner
+    - name: Run AccuKnox Container Scan
       shell: bash
       env:
         ACCUKNOX_ENDPOINT: ${{ inputs.endpoint }}
@@ -32,7 +32,8 @@ runs:
         SOFT_FAIL: ${{ inputs.soft_fail }}
       run: |
         set -e
-        if [ -z "$ACCUKNOX_ENDPOINT" ] || [ -z "$ACCUKNOX_TOKEN" ] || [ -z "$ACCUKNOXLABEL" ] || [ -z "$IMAGE" ]; then
+
+        if [ -z "$ACCUKNOX_ENDPOINT" ] || [ -z "$ACCUKNOX_TOKEN" ] || [ -z "$ACCUKNOX_LABEL" ] || [ -z "$IMAGE" ]; then
           echo "ERROR: endpoint, token, label, and image must be provided!"
           exit 1
         fi
@@ -42,11 +43,9 @@ runs:
         chmod +x accuknox-aspm-scanner
 
         CMD_ARGS="--image $IMAGE"
-
-        SOFT_FAIL_ARG=""
         if [ "$SOFT_FAIL" = "true" ]; then
-          SOFT_FAIL_ARG="--softfail"
+          CMD_ARGS="$CMD_ARGS --softfail"
         fi
 
-        echo "Running AccuKnox container scan with CMD_ARGS: $CMD_ARGS $SOFT_FAIL_ARG"
-        ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG container --command "$CMD_ARGS"
+        echo "Running AccuKnox container scan with CMD_ARGS: $CMD_ARGS"
+        ./accuknox-aspm-scanner scan container --command "$CMD_ARGS"
