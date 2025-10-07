@@ -1,6 +1,10 @@
 name: "AccuKnox Container Scanner"
 description: "Run AccuKnox Container Security scan on a container image"
 
+branding:
+  icon: "shield"
+  color: "purple"
+
 inputs:
   token:
     description: "The token for authenticating with the CSPM panel."
@@ -19,7 +23,7 @@ inputs:
     required: false
     default: ""
   severity:
-    description: "Comma-separated severities: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
+    description: "Comma-separated severities: UNKNOWN, LOW, MEDIUM,HIGH ,CRITICAL"
     required: false
     default: "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
   soft_fail:
