@@ -1,80 +1,73 @@
-name: AccuKnox Container Scan
-
-description: Scan Docker images using AccuKnox and push the results to the AccuKnox Console.
+name: "AccuKnox Container Scanner"
+description: "Run AccuKnox Container Security scan on a container image"
 
 inputs:
-  endpoint:
-    description: "The URL of the AccuKnox Console to push the scan results."
-    required: true
-    default: "cspm.demo.accuknox.com"
   token:
-    description: "The token for authenticating with the Accuknox Console."
+    description: "The token for authenticating with the CSPM panel."
     required: true
-  tenant_id:
-    description: "The ID of the tenant associated with the AccuKnox Console."
+  label:
+    description: "The label created in AccuKnox SaaS for associating scan results."
     required: true
-  image:
-    description: "Image name"
+  endpoint:
+    description: "The URL of the CSPM panel to push the scan results to."
+    required: true
+  image_name:
+    description: "Docker image name to scan"
     required: true
   tag:
-    description: "Add version tag to the image name"
-    required: true
-    default: "${{ github.run_id }}"
-  severity:
-    description: "Allows selection of severity level for the scan. Options include UNKNOWN, LOW, MEDIUM, HIGH, CRITICAL. If specified, the scan will target vulnerabilities of the selected severity level."
+    description: "Docker image tag (optional)"
     required: false
-  label:
-    description: "The label created in AccuKnox Console for associating scan results."
-    required: true
+    default: ""
+  severity:
+    description: "Comma-separated severities: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
+    required: false
+    default: "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
+  soft_fail:
+    description: "Do not return an error code if there are failed checks"
+    required: false
+    default: false
 
 runs:
   using: "composite"
   steps:
-    - name: Validate Inputs
-      run: |
-        curl -fsSL -o validate_inputs.py https://raw.githubusercontent.com/accuknox/container-scan-action/main/validate_inputs.py
-        python3 validate_inputs.py
+    - name: Run AccuKnox Container Scan
       shell: bash
       env:
-        ENDPOINT: ${{ inputs.endpoint }}
-        TOKEN: ${{ inputs.token }}
-        TENANT_ID: ${{ inputs.tenant_id }}
-        IMAGE: ${{ inputs.image }}
+        ACCUKNOX_TOKEN: ${{ inputs.token }}
+        ACCUKNOX_LABEL: ${{ inputs.label }}
+        ACCUKNOX_ENDPOINT: ${{ inputs.endpoint }}
+        IMAGE_NAME: ${{ inputs.image_name }}
         TAG: ${{ inputs.tag }}
         SEVERITY: ${{ inputs.severity }}
-        LABEL: ${{ inputs.label }}
-
-    - name: Download AccuKnox Vulnerability Scanner
+        SOFT_FAIL: ${{ inputs.soft_fail }}
       run: |
-        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
-      shell: bash
+        set -e
 
-    - name: Run AccuKnox Vulnerability Scanner
-      run: |
-        trivy image -f json -o results.json --quiet ${{ inputs.image }}:${{ inputs.tag }}
-      shell: bash
-
-    - name: Push report to AccuKnox Console
-      run: |
-        curl --location --request POST "https://${{ inputs.endpoint }}/api/v1/artifact/?tenant_id=${{ inputs.tenant_id }}&data_type=TR&label_id=${{ inputs.label }}&save_to_s3=true" \
-        --header "Tenant-Id: ${{ inputs.tenant_id }}" \
-        --header "Authorization: Bearer ${{ inputs.token }}" \
-        --form 'file=@"results.json"'
-      shell: bash
-
-    - name: Check for specified severity vulnerabilities
-      if: ${{ inputs.severity != '' }}
-      run: |
-        SEVERITIES=$(echo "${{ inputs.severity }}" | tr ',' '|')
-        if grep -E "\"Severity\":\s*\"($SEVERITIES)\"" results.json; then
-          echo "AccuKnox Scan has halted the deployment due to detected vulnerabilities in severity levels: ${{ inputs.severity }}"
+        if [ -z "$ACCUKNOX_TOKEN" ] || [ -z "$ACCUKNOX_LABEL" ] || [ -z "$ACCUKNOX_ENDPOINT" ] || [ -z "$IMAGE_NAME" ]; then
+          echo "ERROR: token, label, endpoint, and image_name must be provided!"
           exit 1
-        else
-          echo "No blocking severity vulnerabilities found."
-          exit 0
         fi
-      shell: bash
 
-branding:
-  icon: "shield"
-  color: "green"
+        echo "Downloading AccuKnox ASPM Scanner..."
+        curl -L https://github.com/accuknox/aspm-scanner-cli/releases/download/v0.13.4/accuknox-aspm-scanner -o accuknox-aspm-scanner
+        chmod +x accuknox-aspm-scanner
+
+        echo "Installing container scan tool..."
+        ./accuknox-aspm-scanner tool install --type container
+
+        # Clean up SOFT_FAIL and normalize to lowercase
+        SOFT_FAIL="${SOFT_FAIL,,}"
+        SOFT_FAIL="${SOFT_FAIL//[$'\t\r\n ']}"
+        SOFT_FAIL_ARG=""
+        if [ "$SOFT_FAIL" = "true" ]; then
+          SOFT_FAIL_ARG="--softfail"
+        fi
+
+        # Build scan command dynamically
+        CMD="image $IMAGE_NAME"
+        [ -n "$TAG" ] && CMD="image $IMAGE_NAME:$TAG"
+        [ -n "$SEVERITY" ] && CMD="$CMD --severity $SEVERITY"
+
+        echo "Running AccuKnox container scan:"
+        echo "./accuknox-aspm-scanner scan $SOFT_FAIL_ARG container --command \"$CMD\" --container-mode"
+        ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG container --command "$CMD" --container-mode
