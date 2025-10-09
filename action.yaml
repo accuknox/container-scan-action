@@ -1,3 +1,91 @@
+# name: "AccuKnox Container Scanner"
+# description: "Run AccuKnox Container Security scan on a container image"
+
+# branding:
+#   icon: "shield"
+#   color: "purple"
+
+# inputs:
+#   accuknox_token:
+#     description: "The token for authenticating with the CSPM panel."
+#     required: true
+#   accuknox_label:
+#     description: "The label created in AccuKnox SaaS for associating scan results."
+#     required: true
+#   accuknox_endpoint:
+#     description: "The URL of the CSPM panel to push the scan results to."
+#     required: true
+#   image_name:
+#     description: "Docker image name to scan"
+#     required: true
+#   tag:
+#     description: "Docker image tag (optional)"
+#     required: false
+#     default: ""
+#   severity:
+#     description: "Comma-separated severities: UNKNOWN, LOW, MEDIUM, HIGH , CRITICAL"
+#     required: false
+#     default: "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
+#   soft_fail:
+#     description: "Do not return an error code if there are failed checks"
+#     required: false
+#     default: false
+#   compact:
+#     description: "Do not display code blocks in output"
+#     required: false
+#     default: false
+#   quiet:
+#     description: "Display only failed checks"
+#     required: false
+#     default: false
+
+# runs:
+#   using: "composite"
+#   steps:
+#     - name: Run AccuKnox Container Scan
+#       shell: bash
+#       env:
+#         ACCUKNOX_TOKEN: ${{ inputs.accuknox_token }}
+#         ACCUKNOX_LABEL: ${{ inputs.accuknox_label }}
+#         ACCUKNOX_ENDPOINT: ${{ inputs.accuknox_endpoint }}
+#         IMAGE_NAME: ${{ inputs.image_name }}
+#         TAG: ${{ inputs.tag }}
+#         SEVERITY: ${{ inputs.severity }}
+#         SOFT_FAIL: ${{ inputs.soft_fail }}
+#       run: |
+#         set -e
+
+#         if [ -z "$ACCUKNOX_TOKEN" ] || [ -z "$ACCUKNOX_LABEL" ] || [ -z "$ACCUKNOX_ENDPOINT" ] || [ -z "$IMAGE_NAME" ]; then
+#           echo "ERROR: token, label, endpoint, and image_name must be provided!"
+#           exit 1
+#         fi
+
+#         echo "Downloading AccuKnox ASPM Scanner..."
+#         curl -L https://github.com/accuknox/aspm-scanner-cli/releases/download/v0.13.4/accuknox-aspm-scanner -o accuknox-aspm-scanner
+#         chmod +x accuknox-aspm-scanner
+
+#         echo "Installing container scan tool..."
+#         ./accuknox-aspm-scanner tool install --type container
+
+#         # Clean up SOFT_FAIL and normalize to lowercase
+#         SOFT_FAIL="${SOFT_FAIL,,}"
+#         SOFT_FAIL="${SOFT_FAIL//[$'\t\r\n ']}"
+#         SOFT_FAIL_ARG=""
+#         if [ "$SOFT_FAIL" = "true" ]; then
+#           SOFT_FAIL_ARG="--softfail"
+#         fi
+
+#         # Build scan command dynamically
+#         CMD="image $IMAGE_NAME"
+#         [ -n "$TAG" ] && CMD="image $IMAGE_NAME:$TAG"
+#         [ -n "$SEVERITY" ] && CMD="$CMD --severity $SEVERITY"
+#         [ "$COMPACT" = "true" ] && CMD_ARGS="$CMD_ARGS --compact"
+#         [ "$QUIET" = "true" ] && CMD_ARGS="$CMD_ARGS --quiet"
+
+#         echo "Running AccuKnox container scan:"
+#         echo "./accuknox-aspm-scanner scan $SOFT_FAIL_ARG container --command \"$CMD\" --container-mode"
+#         ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG container --command "$CMD" --container-mode
+
 name: "AccuKnox Container Scanner"
 description: "Run AccuKnox Container Security scan on a container image"
 
@@ -30,6 +118,14 @@ inputs:
     description: "Do not return an error code if there are failed checks"
     required: false
     default: false
+  compact:
+    description: "Do not display code blocks in output"
+    required: false
+    default: false
+  quiet:
+    description: "Display only failed checks"
+    required: false
+    default: false
 
 runs:
   using: "composite"
@@ -44,6 +140,8 @@ runs:
         TAG: ${{ inputs.tag }}
         SEVERITY: ${{ inputs.severity }}
         SOFT_FAIL: ${{ inputs.soft_fail }}
+        COMPACT: ${{ inputs.compact }}
+        QUIET: ${{ inputs.quiet }}
       run: |
         set -e
 
@@ -72,6 +170,13 @@ runs:
         [ -n "$TAG" ] && CMD="image $IMAGE_NAME:$TAG"
         [ -n "$SEVERITY" ] && CMD="$CMD --severity $SEVERITY"
 
+        # Add optional flags
+        CMD_ARGS=""
+        [ "$COMPACT" = "true" ] && CMD_ARGS="$CMD_ARGS --compact"
+        [ "$QUIET" = "true" ] && CMD_ARGS="$CMD_ARGS --quiet"
+
         echo "Running AccuKnox container scan:"
-        echo "./accuknox-aspm-scanner scan $SOFT_FAIL_ARG container --command \"$CMD\" --container-mode"
-        ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG container --command "$CMD" --container-mode
+        echo "./accuknox-aspm-scanner scan $SOFT_FAIL_ARG container --command \"$CMD\" --container-mode $CMD_ARGS"
+
+        ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG container --command "$CMD" --container-mode $CMD_ARGS
+
