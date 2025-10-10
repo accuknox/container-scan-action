@@ -60,9 +60,9 @@ jobs:
         uses: accuknox/container-scan-action@v1.0.0
         with:
           soft_fail: false          # set false to fail workflow if vulnerabilities are found
-          accuknox_token: ${{ secrets.ACCUKNOX_TOKEN }}
-          accuknox_label: ${{ secrets.ACCUKNOX_LABEL }}
-          accuknox_endpoint: ${{ secrets.ACCUKNOX_ENDPOINT }}
+          endpoint: ${{ secrets.ACCUKNOX_ENDPOINT }}
+          label: ${{ secrets.ACCUKNOX_LABEL }}
+          token: ${{ secrets.ACCUKNOX_TOKEN }}
           image: "your-image-name"
           tag: "latest"             # optional
           severity: "LOW, MEDIUM, HIGH, CRITICAL, UNKNOWN"
@@ -75,12 +75,12 @@ jobs:
 
 | Input       | Description                                                                 | Required | Default                  |
 | ----------- | --------------------------------------------------------------------------- | -------- | ------------------------ |
-| `accuknox_endpoint`  | URL of the AccuKnox Console to push scan results                            | ✅ Yes    | `cspm.demo.accuknox.com` |
-| `accuknox_token`     | API token to authenticate with the AccuKnox Console                         | ✅ Yes    | —                        |
+| `endpoint`  | URL of the AccuKnox Console to push scan results                            | ✅ Yes    | `cspm.demo.accuknox.com` |
+| `token`     | API token to authenticate with the AccuKnox Console                         | ✅ Yes    | —                        |
 | `image`     | Name of the container image to scan                                         | ✅ Yes    | —                        |
 | `tag`       | Version tag for the container image                                         | ✅ Yes    | `${{ github.run_id }}`   |
 | `severity`  | (Optional) Severity levels to block pipeline (`LOW`, `MEDIUM`, `HIGH`, etc) | ❌ No     | —                        |
-| `accuknox_label`     | Label used in AccuKnox Console to tag scan results                          | ✅ Yes    | —                        |
+| `label`     | Label used in AccuKnox Console to tag scan results                          | ✅ Yes    | —                        |
 
 ---
 
