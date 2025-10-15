@@ -6,13 +6,13 @@ branding:
   color: "purple"
 
 inputs:
-  token:
+  accuknox_token:
     description: "The token for authenticating with the CSPM panel."
     required: true
-  label:
+  accuknox_label:
     description: "The label created in AccuKnox SaaS for associating scan results."
     required: true
-  endpoint:
+  accuknox_endpoint:
     description: "The URL of the CSPM panel to push the scan results to."
     required: true
   image_name:
@@ -23,7 +23,7 @@ inputs:
     required: false
     default: ""
   severity:
-    description: "Comma-separated severities: UNKNOWN, LOW, MEDIUM,HIGH ,CRITICAL"
+    description: "Comma-separated severities: UNKNOWN, LOW, MEDIUM, HIGH, CRITICAL"
     required: false
     default: "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
   soft_fail:
@@ -37,9 +37,9 @@ runs:
     - name: Run AccuKnox Container Scan
       shell: bash
       env:
-        ACCUKNOX_TOKEN: ${{ inputs.token }}
-        ACCUKNOX_LABEL: ${{ inputs.label }}
-        ACCUKNOX_ENDPOINT: ${{ inputs.endpoint }}
+        ACCUKNOX_TOKEN: ${{ inputs.accuknox_token }}
+        ACCUKNOX_LABEL: ${{ inputs.accuknox_label }}
+        ACCUKNOX_ENDPOINT: ${{ inputs.accuknox_endpoint }}
         IMAGE_NAME: ${{ inputs.image_name }}
         TAG: ${{ inputs.tag }}
         SEVERITY: ${{ inputs.severity }}
@@ -71,6 +71,8 @@ runs:
         CMD="image $IMAGE_NAME"
         [ -n "$TAG" ] && CMD="image $IMAGE_NAME:$TAG"
         [ -n "$SEVERITY" ] && CMD="$CMD --severity $SEVERITY"
+        [ "$COMPACT" = "true" ] && CMD_ARGS="$CMD_ARGS --compact"
+        [ "$QUIET" = "true" ] && CMD_ARGS="$CMD_ARGS --quiet"
 
         echo "Running AccuKnox container scan:"
         echo "./accuknox-aspm-scanner scan $SOFT_FAIL_ARG container --command \"$CMD\" --container-mode"
