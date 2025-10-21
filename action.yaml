@@ -1,4 +1,4 @@
-name: "AccuKnox Container Scanner"
+name: "AccuKnox Container Scan"
 description: "Run AccuKnox Container Security scan on a container image"
 
 branding:
