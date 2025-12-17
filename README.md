@@ -57,7 +57,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run AccuKnox Container Scanner
-        uses: accuknox/container-scan-action@v1.0.1
+        uses: accuknox/container-scan-action@latest
         with:
           soft_fail: false          # set false to fail workflow if vulnerabilities are found
           accuknox_endpoint: ${{ secrets.ACCUKNOX_ENDPOINT }}

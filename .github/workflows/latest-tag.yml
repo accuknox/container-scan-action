@@ -1,0 +1,22 @@
+name: Update floating latest tag
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  update-latest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update "latest" tag
+        uses: EndBug/latest-tag@v1.6.2
+        with:
+          ref: latest
+          force-branch: false
+          description: "Auto-tag latest after ${{ github.event.release.tag_name }}"
