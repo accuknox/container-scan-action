@@ -30,6 +30,18 @@ inputs:
     description: "Do not return an error code if there are failed checks"
     required: false
     default: false
+  generate_sbom:
+    description: "Generate Software Bill of Materials (SBOM) instead of vulnerability scan"
+    required: false
+    default: false
+  project_name:
+    description: "Project name (AccuKnox entity) - Required for SBOM uploads"
+    required: false
+    default: ""
+  keep_results:
+    description: "Keep scan results file after completion"
+    required: false
+    default: false
 
 runs:
   using: "composite"
@@ -44,6 +56,9 @@ runs:
         TAG: ${{ inputs.tag }}
         SEVERITY: ${{ inputs.severity }}
         SOFT_FAIL: ${{ inputs.soft_fail }}
+        GENERATE_SBOM: ${{ inputs.generate_sbom }}
+        ACCUKNOX_PROJECT_NAME: ${{ inputs.project_name }}
+        KEEP_RESULTS: ${{ inputs.keep_results }}
       run: |
         set -e
 
@@ -52,9 +67,20 @@ runs:
           exit 1
         fi
 
+        # Validate project_name if SBOM generation is enabled
+        GENERATE_SBOM="${GENERATE_SBOM,,}"
+        GENERATE_SBOM="${GENERATE_SBOM//[$'\t\r\n ']}"
+        if [ "$GENERATE_SBOM" = "true" ] && [ -z "$ACCUKNOX_PROJECT_NAME" ]; then
+          echo "ERROR: project_name is required when generate_sbom is true!"
+          exit 1
+        fi
+
         echo "Downloading AccuKnox ASPM Scanner..."
-        curl -L https://github.com/accuknox/aspm-scanner-cli/releases/download/v0.13.4/accuknox-aspm-scanner -o accuknox-aspm-scanner
+        curl -L https://github.com/accuknox/aspm-scanner-cli/releases/download/v0.14.0/accuknox-aspm-scanner -o accuknox-aspm-scanner
         chmod +x accuknox-aspm-scanner
+
+        touch ./results.json
+        chmod 666 ./results.json
 
         echo "Installing container scan tool..."
         ./accuknox-aspm-scanner tool install --type container
@@ -67,13 +93,34 @@ runs:
           SOFT_FAIL_ARG="--softfail"
         fi
 
+        # Clean up GENERATE_SBOM and normalize to lowercase
+        GENERATE_SBOM_ARG=""
+        if [ "$GENERATE_SBOM" = "true" ]; then
+          GENERATE_SBOM_ARG="--generate-sbom"
+        fi
+
+        # Clean up KEEP_RESULTS and normalize to lowercase
+        KEEP_RESULTS="${KEEP_RESULTS,,}"
+        KEEP_RESULTS="${KEEP_RESULTS//[$'\t\r\n ']}"
+        KEEP_RESULTS_ARG=""
+        if [ "$KEEP_RESULTS" = "true" ]; then
+          KEEP_RESULTS_ARG="--keep-results"
+        fi
+
+         # Build project name argument
+        PROJECT_NAME_ARG=""
+        if [ -n "$ACCUKNOX_PROJECT_NAME" ]; then
+          PROJECT_NAME_ARG="--project-name $ACCUKNOX_PROJECT_NAME"
+        fi
+
         # Build scan command dynamically
         CMD="image $IMAGE_NAME"
         [ -n "$TAG" ] && CMD="image $IMAGE_NAME:$TAG"
         [ -n "$SEVERITY" ] && CMD="$CMD --severity $SEVERITY"
         [ "$COMPACT" = "true" ] && CMD_ARGS="$CMD_ARGS --compact"
         [ "$QUIET" = "true" ] && CMD_ARGS="$CMD_ARGS --quiet"
+        
 
         echo "Running AccuKnox container scan:"
-        echo "./accuknox-aspm-scanner scan $SOFT_FAIL_ARG container --command \"$CMD\" --container-mode"
-        ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG container --command "$CMD" --container-mode
+        echo "./accuknox-aspm-scanner scan $SOFT_FAIL_ARG $KEEP_RESULTS_ARG $PROJECT_NAME_ARG container --command \"$CMD\" --container-mode $GENERATE_SBOM_ARG"
+        ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG $KEEP_RESULTS_ARG $PROJECT_NAME_ARG container --command "$CMD" --container-mode $GENERATE_SBOM_ARG

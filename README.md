@@ -2,42 +2,76 @@
 
 🛡️ **Secure Your Container Images Automatically**
 
-The **AccuKnox Container Scan GitHub Action** enables developers and DevSecOps teams to perform automated vulnerability scans on container images and seamlessly upload results to the AccuKnox Console. Ensure your container workloads are compliant, secure, and free from known vulnerabilities.
+The **AccuKnox Container Scan GitHub Action** enables developers and DevSecOps teams to automatically scan container images for known vulnerabilities and generate **Software Bill of Materials (SBOMs)**, with results seamlessly uploaded to the **AccuKnox Console**. This action integrates directly into CI/CD pipelines to help ensure container workloads are secure, compliant, and production-ready.
 
 ---
 
 ## 🎯 Key Features
 
-- **Automated Container Image Scanning** – Detects known vulnerabilities in containerized workloads.
-- **Seamless GitHub Actions Integration** – Plug directly into your CI/CD pipelines.
-- **Centralized Results** – Scan reports are uploaded to the AccuKnox Console for review and tracking.
-- **Severity Enforcement** – Block deployments with high/critical vulnerabilities.
-- **Custom Labels and Metadata** – Tag scan reports using labels in AccuKnox Console.
+- **Automated Container Image Scanning**  
+  Detect known vulnerabilities in container images during CI/CD execution.
 
----
+- **SBOM Generation (Software Bill of Materials)**  
+  Generate and upload SBOMs for container images to support supply chain security and compliance requirements.
+
+- **Native GitHub Actions Integration**  
+  Easily integrate with GitHub workflows for continuous container security.
+
+- **Centralized Visibility in AccuKnox Console**  
+  Upload vulnerability scan results and SBOMs for centralized monitoring and analysis.
+
+- **Severity-Based Enforcement**  
+  Fail pipelines or block deployments based on configurable severity thresholds (e.g., HIGH, CRITICAL).
+
+
 
 ## ⚠️ Prerequisites
 
 Before using this GitHub Action, ensure you have the following:
 
 - **AccuKnox Console Access** – Sign in to your AccuKnox tenant.
-- **API Token & Tenant ID** – Retrieve these from the AccuKnox Console. (see [Token Generation](https://help.accuknox.com/getting-started/how-to-create-tokens/)).
-- **Label Created in Console** – For tagging the uploaded scan reports.
-- **GitHub Secrets Setup** – Store credentials securely using GitHub Secrets.
+- **API Token** – Retrieve the token from the AccuKnox Console  
+  (see [Token Generation](https://help.accuknox.com/getting-started/how-to-create-tokens/)).
+- **Project Name (from AccuKnox Console UI)** – Create or identify a project in the AccuKnox Console.  
+  This is **mandatory only for SBOM generation**.
+- **Label Created in Console** – Used for tagging and organizing uploaded scan reports.
+- **GitHub Secrets Setup** – Store all sensitive credentials securely using GitHub Secrets.
 
----
+
 
 ## 📌 Installation & Usage
 
 ### Step 1: Retrieve AccuKnox Credentials
 
-* **Login to AccuKnox Console**
-* Navigate to **Settings → Tokens**
-* Click **"Create Token"** and store:
+- **Login to AccuKnox Console**
+- Navigate to **Settings → Tokens**
+- Click **Create Token** and store:
+  - `ACCUKNOX_TOKEN`
 
-  * `Accuknox_token`
+---
 
-### Step 2: Define Your GitHub Workflow
+### Step 2 (Optional): Create a Project in AccuKnox Console (Required for SBOM)
+
+> ⚠️ This step is **only required if you plan to generate SBOMs** using `generate_sbom: true`.
+
+To associate SBOM data with the correct entity, you must create a **Project** in the AccuKnox Console.
+
+1. Log in to the **AccuKnox Dashboard**
+2. Navigate to **SBOM → Projects**
+3. Click **New Project**
+4. Fill in the required details:
+   - **Name*** – Project name (used as `project_name` in the workflow)
+   - **Description** – Short description of the project
+   - **Classifier*** – Select **Container**
+   - **Tags** – (Optional) Add relevant tags
+5. Click **Create**
+
+📌 **Note:**  
+The **Project Name** must exactly match the value provided in the GitHub workflow under `project_name`.
+
+---
+
+### Step 3: Define Your GitHub Workflow
 
 Create a workflow file (e.g., `.github/workflows/container-scan.yml`) and add the following configuration:
 
@@ -46,6 +80,9 @@ name: AccuKnox Container Scan
 
 on:
   push:
+    branches:
+      - main
+  pull_request:
     branches:
       - main
 
@@ -57,46 +94,51 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run AccuKnox Container Scanner
-        uses: accuknox/container-scan-action@latest
+        uses: accuknox/container-scan-action@main
+      
         with:
-          soft_fail: false          # set false to fail workflow if vulnerabilities are found
-          accuknox_endpoint: ${{ secrets.ACCUKNOX_ENDPOINT }}
-          accuknox_label: ${{ secrets.ACCUKNOX_LABEL }}
           accuknox_token: ${{ secrets.ACCUKNOX_TOKEN }}
-          image: "your-image-name"
-          tag: "latest"             # optional
-          severity: "LOW, MEDIUM, HIGH, CRITICAL, UNKNOWN"
-          
+          accuknox_label: ${{ secrets.ACCUKNOX_LABEL }}
+          accuknox_endpoint: ${{ secrets.ACCUKNOX_ENDPOINT }}
+          image_name: "your-image"
+          tag: "latest"
+          severity: "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
+          soft_fail: false
+          keep_results: true
+          generate_sbom: true   # set true to generate SBOM
+          project_name: ""      # must match the project name created in the dashboard
 ```
 
----
+### ⚙️ Configuration Options (Inputs)
 
-## ⚙️ Configuration Options (Inputs)
-
-| Input       | Description                                                                 | Required | Default                  |
-| ----------- | --------------------------------------------------------------------------- | -------- | ------------------------ |
-| `accuknox_endpoint`  | URL of the AccuKnox Console to push scan results                            | ✅ Yes    | `cspm.demo.accuknox.com` |
-| `accuknox_token`     | API token to authenticate with the AccuKnox Console                         | ✅ Yes    | —                        |
-| `image`     | Name of the container image to scan                                         | ✅ Yes    | —                        |
-| `tag`       | Version tag for the container image                                         | ✅ Yes    | `${{ github.run_id }}`   |
-| `severity`  | (Optional) Severity levels to block pipeline (`LOW`, `MEDIUM`, `HIGH`, etc) | ❌ No     | —                        |
-| `accuknox_label`     | Label used in AccuKnox Console to tag scan results                          | ✅ Yes    | —                        |
+| Input | Description | Required | Default |
+|------|------------|----------|---------|
+| `accuknox_endpoint` | URL of the AccuKnox Console to upload scan results | ✅ Yes | — |
+| `accuknox_token` | API token used to authenticate with the AccuKnox Console | ✅ Yes | — |
+| `accuknox_label` | Label used in the AccuKnox Console to tag scan results | ✅ Yes | — |
+| `image_name` | Name of the container image to scan | ✅ Yes | — |
+| `tag` | Tag of the container image | ❌ No | `latest` |
+| `severity` | Vulnerability severities to enforce (e.g., LOW, MEDIUM, HIGH, CRITICAL) | ❌ No | All |
+| `soft_fail` | Continue pipeline execution even if vulnerabilities are found | ❌ No | `false` |
+| `keep_results` | Retain scan result files after execution | ❌ No | `false` |
+| `generate_sbom` | Generate and upload SBOM instead of vulnerability scan | ❌ No | `false` |
+| `project_name` | AccuKnox project name (required when SBOM generation is enabled) | ❌ No | — |
 
 ---
 
 ## 🔍 How It Works
 
-1️⃣ **Container Image is Scanned**
-AccuKnox Container Vulnerability Scanner analyzes the specified image for CVEs and misconfigurations.
+1️⃣ **Container Image is Scanned**  
+The AccuKnox Container Scanner analyzes the specified image for known vulnerabilities and security issues.
 
-2️⃣ **Scan Report Generated**
-A JSON scan report is produced with detailed findings.
+2️⃣ **Scan Report Generated**  
+A detailed JSON scan report is generated containing vulnerability findings.
 
-3️⃣ **Upload to AccuKnox Console**
-The report is securely sent to your tenant's dashboard for centralized review and tracking.
+3️⃣ **Upload to AccuKnox Console**  
+Scan results (and SBOMs, if enabled) are securely uploaded to your AccuKnox tenant for centralized visibility.
 
-4️⃣ **Severity Filtering (Optional)**
-If `severity` is defined, the workflow will block if matching vulnerabilities are found.
+4️⃣ **Severity Filtering (Optional)**  
+If `severity` is configured, the workflow will fail when matching vulnerabilities are detected.
 
 ---
 
@@ -104,32 +146,34 @@ If `severity` is defined, the workflow will block if matching vulnerabilities ar
 
 ❌ **Pipeline Blocked by Vulnerabilities?**
 
-* Adjust the `severity` input to allow less critical findings.
-* Review scan reports in the AccuKnox Console to triage issues.
+- Adjust the `severity` input to allow less critical findings.
+- Review scan results in the AccuKnox Console and remediate identified issues.
 
 🔑 **Authentication Errors?**
 
-* Verify your `token` and `tenant_id` are correctly stored in GitHub Secrets.
-* Regenerate credentials in AccuKnox Console if needed.
+- Verify `ACCUKNOX_TOKEN`, `ACCUKNOX_LABEL`, and `ACCUKNOX_ENDPOINT` are correctly stored in GitHub Secrets.
+- Regenerate the API token in the AccuKnox Console if required.
 
 🧪 **Best Practices**
 
-* Scan every push and release candidate.
-* Monitor trends via AccuKnox Console for proactive risk management.
+- Scan container images on every push and pull request.
+- Enable SBOM generation to improve software supply chain visibility.
+- Monitor trends and findings in the AccuKnox Console for proactive risk management.
 
 ---
 
 ## 📖 Support & Documentation
 
-📚 **Read More**: [AccuKnox Docs](https://help.accuknox.com)
+📚 **Read More**: [AccuKnox Docs](https://help.accuknox.com)  
 📧 **Contact Support**: [support@accuknox.com](mailto:support@accuknox.com)
 
 ---
 
 ## 🏁 Conclusion
 
-The **AccuKnox Container Scan GitHub Action** empowers your CI/CD pipelines with automated container security scanning. Identify critical issues early, enforce deployment security gates, and gain visibility into vulnerabilities across container workloads.
+The **AccuKnox Container Scan GitHub Action** empowers CI/CD pipelines with automated container security scanning and SBOM generation. Identify risks early, enforce security gates, and gain visibility into container vulnerabilities across your environments.
 
 🔐 **Shift Left with AccuKnox – Secure from Build to Runtime!** 🧱
 
 ---
+
