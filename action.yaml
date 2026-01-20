@@ -49,7 +49,6 @@ runs:
     - name: Run AccuKnox Container Scan
       shell: bash
       env:
-        DEBUG: "TRUE" 
         ACCUKNOX_TOKEN: ${{ inputs.accuknox_token }}
         ACCUKNOX_LABEL: ${{ inputs.accuknox_label }}
         ACCUKNOX_ENDPOINT: ${{ inputs.accuknox_endpoint }}
