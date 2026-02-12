@@ -104,9 +104,10 @@ jobs:
           tag: "latest"
           severity: "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
           soft_fail: true
-          upload_results: true  # set true if you want to upload result to Github artefact
-          generate_sbom: true   # set true to generate SBOM
-          project_name: ""      # must match the project name created in the dashboard
+          upload_results: true  # (Optional) set true if you want to upload result to Github artefact
+          generate_sbom: true   # (Optional) set true to generate SBOM
+          project_name: ""      # (Optional) must match the project name created in the dashboard
+          dockerfile_context: Dockerfile  # (Optional) Path to Dockerfile for building image before scan 
 ```
 
 ### ⚙️ Configuration Options (Inputs)
@@ -123,6 +124,7 @@ jobs:
 | `generate_sbom` | Generate and upload SBOM instead of vulnerability scan | ❌ No | `false` |
 | `project_name` | AccuKnox project name (required when SBOM generation is enabled) | ❌ No | — |
 | `upload_results` | Upload scan results as GitHub artifact | ❌ No | `false` |
+| `dockerfile_context` | Path to Dockerfile for building image before scan (locally) | ❌ No | — |
 
 ---
 
