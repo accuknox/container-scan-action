@@ -6,6 +6,10 @@ branding:
   color: "purple"
 
 inputs:
+  dockerfile_context:
+    description: "The context of the Dockerfile to use for building the image (optional if image already exists)."
+    required: false
+    default: ""
   accuknox_token:
     description: "The token for authenticating with the CSPM panel."
     required: true
@@ -21,7 +25,7 @@ inputs:
   tag:
     description: "Docker image tag (optional)"
     required: false
-    default: ""
+    default: "latest"
   severity:
     description: "Comma-separated severities: UNKNOWN, LOW, MEDIUM, HIGH, CRITICAL"
     required: false
@@ -41,11 +45,22 @@ inputs:
   keep_results:
     description: "Keep scan results file after completion"
     required: false
+    default: true  
+  upload_results:
+    description: "Upload scan results as GitHub artifact"
+    required: false
     default: false
-
+  
 runs:
   using: "composite"
   steps:
+    - name: Docker Build (optional)
+      if: inputs.dockerfile_context != ''
+      run: |
+        echo "Building Docker image ${{ inputs.image_name }}:${{ inputs.tag }} from context ${{ inputs.dockerfile_context }}..."
+        docker build -t ${{ inputs.image_name }}:${{ inputs.tag }} -f ${{ inputs.dockerfile_context }} .
+      shell: bash
+
     - name: Run AccuKnox Container Scan
       shell: bash
       env:
@@ -58,7 +73,8 @@ runs:
         SOFT_FAIL: ${{ inputs.soft_fail }}
         GENERATE_SBOM: ${{ inputs.generate_sbom }}
         ACCUKNOX_PROJECT_NAME: ${{ inputs.project_name }}
-        KEEP_RESULTS: ${{ inputs.keep_results }}
+        KEEP_RESULTS: true
+        UPLOAD_RESULTS: ${{ inputs.upload_results }}
       run: |
         set -e
 
@@ -108,9 +124,9 @@ runs:
         fi
 
          # Build project name argument
-        PROJECT_NAME_ARG=""
+        PROJECT_NAME_ARGS=()
         if [ -n "$ACCUKNOX_PROJECT_NAME" ]; then
-          PROJECT_NAME_ARG="--project-name $ACCUKNOX_PROJECT_NAME"
+          PROJECT_NAME_ARGS=(--project-name "$ACCUKNOX_PROJECT_NAME")
         fi
 
         # Build scan command dynamically
@@ -121,6 +137,36 @@ runs:
         [ "$QUIET" = "true" ] && CMD_ARGS="$CMD_ARGS --quiet"
         
 
-        echo "Running AccuKnox container scan:"
-        echo "./accuknox-aspm-scanner scan $SOFT_FAIL_ARG $KEEP_RESULTS_ARG $PROJECT_NAME_ARG container --command \"$CMD\" --container-mode $GENERATE_SBOM_ARG"
-        ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG $KEEP_RESULTS_ARG $PROJECT_NAME_ARG container --command "$CMD" --container-mode $GENERATE_SBOM_ARG
+        echo "Running AccuKnox vulnerability scan..."
+        ./accuknox-aspm-scanner scan \
+          $SOFT_FAIL_ARG \
+          $KEEP_RESULTS_ARG \
+          container \
+          --command "$CMD" \
+          --container-mode
+
+        cp results.json results-vuln.json
+ 
+        if [ "$GENERATE_SBOM" = "true" ]; then
+          echo "Running AccuKnox SBOM scan..."
+          ./accuknox-aspm-scanner scan \
+            $SOFT_FAIL_ARG \
+            $KEEP_RESULTS_ARG \
+            "${PROJECT_NAME_ARGS[@]}" \
+            container \
+            --command "$CMD" \
+            --container-mode \
+            --generate-sbom
+
+          cp results.json results-sbom.json
+          
+        fi
+
+    - name: Upload AccuKnox Scan Results
+      if: inputs.upload_results == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: accuknox-scan-results
+        path: |
+          results-*.json
+        retention-days: 15
