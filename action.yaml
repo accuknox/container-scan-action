@@ -9,15 +9,15 @@ inputs:
   dockerfile_context:
     description: "The context of the Dockerfile to use for building the image (optional if image already exists)."
     required: false
-    default: ""
+    default: "Dockerfile"
   accuknox_token:
-    description: "The token for authenticating with the CSPM panel."
+    description: "The token for authenticating with the admin panel."
     required: true
   accuknox_label:
     description: "The label created in AccuKnox SaaS for associating scan results."
     required: true
   accuknox_endpoint:
-    description: "The URL of the CSPM panel to push the scan results to."
+    description: "The URL of the admin panel to push the scan results to."
     required: true
   image_name:
     description: "Docker image name to scan"
@@ -42,14 +42,10 @@ inputs:
     description: "Project name (AccuKnox entity) - Required for SBOM uploads"
     required: false
     default: ""
-  keep_results:
-    description: "Keep scan results file after completion"
-    required: false
-    default: true  
   upload_results:
     description: "Upload scan results as GitHub artifact"
     required: false
-    default: false
+    default: true
   
 runs:
   using: "composite"
@@ -73,7 +69,6 @@ runs:
         SOFT_FAIL: ${{ inputs.soft_fail }}
         GENERATE_SBOM: ${{ inputs.generate_sbom }}
         ACCUKNOX_PROJECT_NAME: ${{ inputs.project_name }}
-        KEEP_RESULTS: true
         UPLOAD_RESULTS: ${{ inputs.upload_results }}
       run: |
         set -e
@@ -115,15 +110,7 @@ runs:
           GENERATE_SBOM_ARG="--generate-sbom"
         fi
 
-        # Clean up KEEP_RESULTS and normalize to lowercase
-        KEEP_RESULTS="${KEEP_RESULTS,,}"
-        KEEP_RESULTS="${KEEP_RESULTS//[$'\t\r\n ']}"
-        KEEP_RESULTS_ARG=""
-        if [ "$KEEP_RESULTS" = "true" ]; then
-          KEEP_RESULTS_ARG="--keep-results"
-        fi
-
-         # Build project name argument
+        # Build project name argument
         PROJECT_NAME_ARGS=()
         if [ -n "$ACCUKNOX_PROJECT_NAME" ]; then
           PROJECT_NAME_ARGS=(--project-name "$ACCUKNOX_PROJECT_NAME")
@@ -140,25 +127,25 @@ runs:
         echo "Running AccuKnox vulnerability scan..."
         ./accuknox-aspm-scanner scan \
           $SOFT_FAIL_ARG \
-          $KEEP_RESULTS_ARG \
+          --keep-results \
           container \
           --command "$CMD" \
           --container-mode
 
-        cp results.json results-vuln.json
+        mv results.json results-vuln.json
  
         if [ "$GENERATE_SBOM" = "true" ]; then
           echo "Running AccuKnox SBOM scan..."
           ./accuknox-aspm-scanner scan \
             $SOFT_FAIL_ARG \
-            $KEEP_RESULTS_ARG \
+            --keep-results \
             "${PROJECT_NAME_ARGS[@]}" \
             container \
             --command "$CMD" \
             --container-mode \
             --generate-sbom
 
-          cp results.json results-sbom.json
+          mv results.json results-sbom.json
           
         fi
 
