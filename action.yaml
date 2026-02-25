@@ -50,8 +50,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Docker Build (optional)
-      if: inputs.dockerfile_context != ''
+    - name: Docker Build 
       run: |
         echo "Building Docker image ${{ inputs.image_name }}:${{ inputs.tag }} from context ${{ inputs.dockerfile_context }}..."
         docker build -t ${{ inputs.image_name }}:${{ inputs.tag }} -f ${{ inputs.dockerfile_context }} .

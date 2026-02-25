@@ -107,7 +107,7 @@ jobs:
           upload_results: true  # (Optional) set true if you want to upload result to Github artefact
           generate_sbom: true   # (Optional) set true to generate SBOM
           project_name: ""      # (Optional) must match the project name created in the dashboard
-          dockerfile_context: Dockerfile  # (Optional) Path to Dockerfile for building image before scan 
+          dockerfile_context: Dockerfile  # Path to Dockerfile for building image before scan 
 ```
 
 ### ⚙️ Configuration Options (Inputs)
